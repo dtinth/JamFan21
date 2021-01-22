@@ -57,17 +57,15 @@ namespace JamFan21.Pages
             Geolocation geolocation = api.GetGeolocation(geoParams);
             var clientLatitude = Convert.ToDouble(geolocation.GetLatitude());
             var clientLongitude = Convert.ToDouble(geolocation.GetLongitude());
+var output = clientLatitude + " " + clientLongitude + "\r\n"  ;
 
-            var output = "";
             foreach (var server in servers)
             {
                 // server has people?
                 if (server.clients != null)
                 {
-                    output = output + " another ";
                     GeolocationParams geoParamssvr = new GeolocationParams();
-                    geoParamssvr.SetIPAddress(server.ipaddrs);
-                    output = output + "xxx " + server.ipaddrs;
+                    geoParamssvr.SetIPAddress(server.ip);
                     geoParamssvr.SetFields("geo,time_zone,currency");
                     Geolocation geolocationsvr = api.GetGeolocation(geoParamssvr);
                     double serverLatitude = Convert.ToDouble(geolocationsvr.GetLatitude());
@@ -80,7 +78,7 @@ namespace JamFan21.Pages
                     const double DegreesToRadians = (Math.PI / 180D);
                     //                    https://www.simongilbert.net/parallel-haversine-formula-dotnetcore/
                     var deltalat = (serverLatitude - clientLatitude) * DegreesToRadians;
-                    var deltalong = (serverLatitude - clientLatitude) * DegreesToRadians;
+                    var deltalong = (serverLongitude - clientLongitude) * DegreesToRadians;
                     var a = Math.Pow(
                     Math.Sin(deltalat / 2D), 2D) +
                     Math.Cos(clientLatitude * DegreesToRadians) *
@@ -88,7 +86,7 @@ namespace JamFan21.Pages
                     Math.Pow(Math.Sin(deltalong / 2D), 2D);
                     var c = 2D * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1D - a));
                     var d = EquatorialRadiusOfEarth * c;
-                    output = output + " " + d.ToString();
+                    output = output + " >>" + server.name + " " + server.city + " " + serverLatitude + " " + serverLongitude + " " +  d.ToString() + "<<";
                 }
             }
             return output;
