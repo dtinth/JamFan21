@@ -57,8 +57,9 @@ namespace JamFan21.Pages
             Geolocation geolocation = api.GetGeolocation(geoParams);
             var clientLatitude = Convert.ToDouble(geolocation.GetLatitude());
             var clientLongitude = Convert.ToDouble(geolocation.GetLongitude());
-var output = clientLatitude + " " + clientLongitude + "\r\n"  ;
+//var output = clientLatitude + " " + clientLongitude + "\r\n"  ;
 
+var output = "" ;
             foreach (var server in servers)
             {
                 // server has people?
@@ -86,7 +87,7 @@ var output = clientLatitude + " " + clientLongitude + "\r\n"  ;
                     Math.Pow(Math.Sin(deltalong / 2D), 2D);
                     var c = 2D * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1D - a));
                     var d = EquatorialRadiusOfEarth * c;
-                    output = output + " >>" + server.name + " " + server.city + " " + serverLatitude + " " + serverLongitude + " " +  d.ToString() + "<<";
+                    output = output + " >>" + server.name + " " + server.city + " " +  Convert.ToInt32(d).ToString() + "<<\n\n";
                 }
             }
             return output;
