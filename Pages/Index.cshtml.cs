@@ -46,11 +46,11 @@ namespace JamFan21.Pages
 
         Dictionary<string, string> JamulusListURLs = new Dictionary<string, string>()
         {
-            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" }
-//            ,{"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" },
-  //          { "Genre Rock", "http://jamulus.softins.co.uk/servers.php?central=jamulusrock.fischvolk.de:22424" },
-   //         { "Genre Jazz", "http://jamulus.softins.co.uk/servers.php?central=jamulusjazz.fischvolk.de:22324" },
-//            { "Genre Classical/Folk/Choir", "http://jamulus.softins.co.uk/servers.php?central=jamulusclassical.fischvolk.de:22524" }
+            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" },
+            {"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" },
+            { "Genre Rock", "http://jamulus.softins.co.uk/servers.php?central=jamulusrock.fischvolk.de:22424" },
+            { "Genre Jazz", "http://jamulus.softins.co.uk/servers.php?central=jamulusjazz.fischvolk.de:22324" },
+            { "Genre Classical/Folk/Choir", "http://jamulus.softins.co.uk/servers.php?central=jamulusclassical.fischvolk.de:22524" }
         };
 
         Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
@@ -127,8 +127,10 @@ namespace JamFan21.Pages
 
     class ServersForMe
         {
-            public ServersForMe(string ip, int distance, int peeps) { serverIpAddress = ip; distanceAway = distance; people = peeps; }
+            public ServersForMe(string ip, string na, string ci, int distance, int peeps) { serverIpAddress = ip; name = na; city = ci; distanceAway = distance; people = peeps; }
             public string serverIpAddress;
+            public string name;
+            public string city;
             public int distanceAway;
             public int people;
         }
@@ -151,7 +153,7 @@ namespace JamFan21.Pages
                     int people = 0;
                     if (server.clients != null) 
                         people = server.clients.GetLength(0);
-                    allMyServers.Add(new ServersForMe(server.ip, DistanceFromMe(server.ip), people));
+                    allMyServers.Add(new ServersForMe(server.ip, server.name, server.city, DistanceFromMe(server.ip), people));
 
                     // hey, coder, if there is anyone on this server, stop iterating so we can reduce requests to geolocate!
 //                    if (people > 0)
@@ -159,11 +161,13 @@ namespace JamFan21.Pages
                 }
             }
 
+            IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
+
             string output = "";
-            foreach (var s in allMyServers)
+            foreach (var s in sortedByDistanceAway)
             {
                 if(s.people > 0)
-                    output += " " + s.distanceAway + " " + s.serverIpAddress + " " + s.people;
+                    output += " " + s.name + " " + s.city + " " + s.distanceAway + " " + s.serverIpAddress + " " + s.people;
             }
             return output;
         }
