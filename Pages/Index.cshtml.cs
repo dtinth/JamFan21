@@ -46,8 +46,8 @@ namespace JamFan21.Pages
 
         Dictionary<string, string> JamulusListURLs = new Dictionary<string, string>()
         {
-            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" },
-            {"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" },
+            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" }
+,            {"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" },
             { "Genre Rock", "http://jamulus.softins.co.uk/servers.php?central=jamulusrock.fischvolk.de:22424" },
             { "Genre Jazz", "http://jamulus.softins.co.uk/servers.php?central=jamulusjazz.fischvolk.de:22324" },
             { "Genre Classical/Folk/Choir", "http://jamulus.softins.co.uk/servers.php?central=jamulusclassical.fischvolk.de:22524" }
@@ -163,12 +163,13 @@ namespace JamFan21.Pages
 
             IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
 
-            string output = "";
+            string output = "<table><th>Category<td>Name<td>City<td>IP Address<td>Musicians</th>";
             foreach (var s in sortedByDistanceAway)
             {
-                if(s.people > 0)
-                    output += " " + s.name + " " + s.city + " " + s.distanceAway + " " + s.serverIpAddress + " " + s.people;
+                if(s.people > 1) // more than one please
+                    output += "<tr><td>?<td>" +  s.name + "<td>" + s.city + "<td>" + s.serverIpAddress + "<td>" + s.people + "</tr>";;
             }
+output += "</table>" ;
             return output;
         }
 
