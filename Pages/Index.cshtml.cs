@@ -43,12 +43,30 @@ namespace JamFan21.Pages
 
         }
 
-        public async Task<string> GetGutsRightNow()
-        {
-            using var client = new HttpClient();
-            var serverJson = await client.GetStringAsync("http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124");
-            var servers = System.Text.Json.JsonSerializer.Deserialize<List<JamulusServers>>(serverJson);
 
+        Dictionary<string, string> JamulusListURLs = new Dictionary<string, string>()
+        {
+//            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" },
+ //           {"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" },
+  //          { "Genre Rock", "http://jamulus.softins.co.uk/servers.php?central=jamulusrock.fischvolk.de:22424" },
+   //         { "Genre Jazz", "http://jamulus.softins.co.uk/servers.php?central=jamulusjazz.fischvolk.de:22324" },
+            { "Genre Classical/Folk/Choir", "http://jamulus.softins.co.uk/servers.php?central=jamulusclassical.fischvolk.de:22524" }
+        };
+
+        Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
+
+        protected async Task MineLists()
+        {
+            foreach (var key in JamulusListURLs.Keys)
+            {
+                using var client = new HttpClient();
+                var serverJson = await client.GetStringAsync(JamulusListURLs[key]);
+                LastReportedList[key] = serverJson;
+            }
+        }
+
+        protected int DistanceFromMe(string ipThem)
+        {
             IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
 
             GeolocationParams geoParams = new GeolocationParams();
@@ -57,40 +75,55 @@ namespace JamFan21.Pages
             Geolocation geolocation = api.GetGeolocation(geoParams);
             var clientLatitude = Convert.ToDouble(geolocation.GetLatitude());
             var clientLongitude = Convert.ToDouble(geolocation.GetLongitude());
-//var output = clientLatitude + " " + clientLongitude + "\r\n"  ;
 
-var output = "" ;
-            foreach (var server in servers)
+            GeolocationParams geoParamssvr = new GeolocationParams();
+            geoParamssvr.SetIPAddress(ipThem);
+            geoParamssvr.SetFields("geo,time_zone,currency");
+            Geolocation geolocationsvr = api.GetGeolocation(geoParamssvr);
+            double serverLatitude = Convert.ToDouble(geolocationsvr.GetLatitude());
+            double serverLongitude = Convert.ToDouble(geolocationsvr.GetLongitude());
+
+            // https://www.simongilbert.net/parallel-haversine-formula-dotnetcore/
+            const double EquatorialRadiusOfEarth = 6371D;
+            const double DegreesToRadians = (Math.PI / 180D);
+            var deltalat = (serverLatitude - clientLatitude) * DegreesToRadians;
+            var deltalong = (serverLongitude - clientLongitude) * DegreesToRadians;
+            var a = Math.Pow(
+                Math.Sin(deltalat / 2D), 2D) +
+                Math.Cos(clientLatitude * DegreesToRadians) *
+                Math.Cos(serverLatitude * DegreesToRadians) *
+                Math.Pow(Math.Sin(deltalong / 2D), 2D);
+            var c = 2D * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1D - a));
+            var d = EquatorialRadiusOfEarth * c;
+            return Convert.ToInt32(d);
+        }
+
+    class ServersForMe
+        {
+            public ServersForMe(string ip, int distance) { serverIpAddress = ip; distanceAway = distance; }
+            public string serverIpAddress;
+            public int distanceAway;
+        }
+
+        public async Task<string> GetGutsRightNow() //
+        {
+            await MineLists(); // eventually this will be smart, go ahead and call it.
+
+            // Now for each last reported list, extract all the hmmm servers for now. all them servers by LIST, NAME, CITY, IP ADDRESS, # OF PEOPLE.
+            // cuz I wanna add a new var: Every distance to this client!
+            // so eager, just get them distances!
+
+            var allMyServers = new List<ServersForMe>();
+
+            foreach (var key in LastReportedList.Keys)
             {
-                // server has people?
-                if (server.clients != null)
+                var serversOnList = System.Text.Json.JsonSerializer.Deserialize<List<JamulusServers>>(LastReportedList[key]);
+                foreach (var server in serversOnList)
                 {
-                    GeolocationParams geoParamssvr = new GeolocationParams();
-                    geoParamssvr.SetIPAddress(server.ip);
-                    geoParamssvr.SetFields("geo,time_zone,currency");
-                    Geolocation geolocationsvr = api.GetGeolocation(geoParamssvr);
-                    double serverLatitude = Convert.ToDouble(geolocationsvr.GetLatitude());
-                    double serverLongitude = Convert.ToDouble(geolocationsvr.GetLongitude());
-
-                    // this is the client's lat-long... ok on server?
-                    //                    return clientLatitude.ToString() + " " + clientLongitude.ToString() + " " + serverLatitude.ToString() + " " + serverLongitude.ToString()  ;
-
-                    const double EquatorialRadiusOfEarth = 6371D;
-                    const double DegreesToRadians = (Math.PI / 180D);
-                    //                    https://www.simongilbert.net/parallel-haversine-formula-dotnetcore/
-                    var deltalat = (serverLatitude - clientLatitude) * DegreesToRadians;
-                    var deltalong = (serverLongitude - clientLongitude) * DegreesToRadians;
-                    var a = Math.Pow(
-                    Math.Sin(deltalat / 2D), 2D) +
-                    Math.Cos(clientLatitude * DegreesToRadians) *
-                    Math.Cos(serverLatitude * DegreesToRadians) *
-                    Math.Pow(Math.Sin(deltalong / 2D), 2D);
-                    var c = 2D * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1D - a));
-                    var d = EquatorialRadiusOfEarth * c;
-                    output = output + " >>" + server.name + " " + server.city + " " +  Convert.ToInt32(d).ToString() + "<<\n\n";
+                    allMyServers.Add(new ServersForMe(server.ip, DistanceFromMe(server.ip)));
                 }
             }
-            return output;
+            return allMyServers.Count().ToString();
         }
 
         public string RightNow
