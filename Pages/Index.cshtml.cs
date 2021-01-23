@@ -54,9 +54,14 @@ namespace JamFan21.Pages
         };
 
         Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
+        DateTime? LastReportedListGatheredAt = null;
 
         protected async Task MineLists()
         {
+            if (LastReportedListGatheredAt != null)
+                if (DateTime.Now < LastReportedListGatheredAt.Value.AddSeconds(60))
+                    return; // data we have was gathered within the last minute.
+
             foreach (var key in JamulusListURLs.Keys)
             {
                 using var client = new HttpClient();
@@ -127,7 +132,8 @@ namespace JamFan21.Pages
 
     class ServersForMe
         {
-            public ServersForMe(string ip, string na, string ci, int distance, int peeps) { serverIpAddress = ip; name = na; city = ci; distanceAway = distance; people = peeps; }
+            public ServersForMe(string cat, string ip, string na, string ci, int distance, int peeps) { category = cat;  serverIpAddress = ip; name = na; city = ci; distanceAway = distance; people = peeps; }
+            public string category;
             public string serverIpAddress;
             public string name;
             public string city;
@@ -137,7 +143,7 @@ namespace JamFan21.Pages
 
         public async Task<string> GetGutsRightNow() //
         {
-            await MineLists(); // eventually this will be smart, go ahead and call it.
+            await MineLists();
 
             // Now for each last reported list, extract all the hmmm servers for now. all them servers by LIST, NAME, CITY, IP ADDRESS, # OF PEOPLE.
             // cuz I wanna add a new var: Every distance to this client!
@@ -151,13 +157,12 @@ namespace JamFan21.Pages
                 foreach (var server in serversOnList)
                 {
                     int people = 0;
-                    if (server.clients != null) 
+                    if (server.clients != null)
                         people = server.clients.GetLength(0);
-                    allMyServers.Add(new ServersForMe(server.ip, server.name, server.city, DistanceFromMe(server.ip), people));
+                    if (people < 2)
+                        continue; // just fuckin don't care about 0 or even 1?
 
-                    // hey, coder, if there is anyone on this server, stop iterating so we can reduce requests to geolocate!
-//                    if (people > 0)
-//                        break;
+                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, DistanceFromMe(server.ip), people));
                 }
             }
 
@@ -166,10 +171,10 @@ namespace JamFan21.Pages
             string output = "<table><th>Category<td>Name<td>City<td>IP Address<td>Musicians</th>";
             foreach (var s in sortedByDistanceAway)
             {
-                if(s.people > 1) // more than one please
-                    output += "<tr><td>?<td>" +  s.name + "<td>" + s.city + "<td>" + s.serverIpAddress + "<td>" + s.people + "</tr>";;
+                if (s.people > 1) // more than one please
+                    output += "<tr><td>?<td>" + s.name + "<td>" + s.city + "<td>" + s.serverIpAddress + "<td>" + s.people + "</tr>"; ;
             }
-output += "</table>" ;
+            output += "</table>";
             return output;
         }
 
