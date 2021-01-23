@@ -46,11 +46,11 @@ namespace JamFan21.Pages
 
         Dictionary<string, string> JamulusListURLs = new Dictionary<string, string>()
         {
-//            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" },
- //           {"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" },
+            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" }
+//            ,{"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" },
   //          { "Genre Rock", "http://jamulus.softins.co.uk/servers.php?central=jamulusrock.fischvolk.de:22424" },
    //         { "Genre Jazz", "http://jamulus.softins.co.uk/servers.php?central=jamulusjazz.fischvolk.de:22324" },
-            { "Genre Classical/Folk/Choir", "http://jamulus.softins.co.uk/servers.php?central=jamulusclassical.fischvolk.de:22524" }
+//            { "Genre Classical/Folk/Choir", "http://jamulus.softins.co.uk/servers.php?central=jamulusclassical.fischvolk.de:22524" }
         };
 
         Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
@@ -65,23 +65,50 @@ namespace JamFan21.Pages
             }
         }
 
-        protected int DistanceFromMe(string ipThem)
+        class CachedGeolocation
         {
-            IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
+            public CachedGeolocation(int d, double lat, double longi) { queriedThisDay = d;latitude = lat;longitude = longi; }
+            public int queriedThisDay;
+            public double latitude;
+            public double longitude;
+        }
 
+        Dictionary<string, CachedGeolocation> geocache = new Dictionary<string, CachedGeolocation>();
+
+        protected void SmartGeoLocate(string ip, ref double latitude, ref double longitude)
+        {
+            // for any IP address, use a cached object if it's not too old.
+            if(geocache.ContainsKey(ip))
+            {
+                var cached = geocache[ip];
+                if(cached.queriedThisDay + 1 < DateTime.Now.DayOfYear)
+                {
+                    latitude = cached.latitude;
+                    longitude = cached.longitude;
+                    return;
+                }
+            }
+
+            // don't have cached data, or it's too old.
+            IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
             GeolocationParams geoParams = new GeolocationParams();
-            geoParams.SetIPAddress(HttpContext.Connection.RemoteIpAddress.ToString());
+            geoParams.SetIPAddress(ip);
             geoParams.SetFields("geo,time_zone,currency");
             Geolocation geolocation = api.GetGeolocation(geoParams);
-            var clientLatitude = Convert.ToDouble(geolocation.GetLatitude());
-            var clientLongitude = Convert.ToDouble(geolocation.GetLongitude());
+            latitude = Convert.ToDouble(geolocation.GetLatitude());
+            longitude = Convert.ToDouble(geolocation.GetLongitude());
+            geocache[ip] = new CachedGeolocation(DateTime.Now.DayOfYear, latitude, longitude);
+        }
 
-            GeolocationParams geoParamssvr = new GeolocationParams();
-            geoParamssvr.SetIPAddress(ipThem);
-            geoParamssvr.SetFields("geo,time_zone,currency");
-            Geolocation geolocationsvr = api.GetGeolocation(geoParamssvr);
-            double serverLatitude = Convert.ToDouble(geolocationsvr.GetLatitude());
-            double serverLongitude = Convert.ToDouble(geolocationsvr.GetLongitude());
+        protected int DistanceFromMe(string ipThem)
+        {
+            string clientIP = HttpContext.Connection.RemoteIpAddress.ToString();
+            if (clientIP.Length < 5)
+                clientIP = "104.215.148.63"; //microsoft as test 
+
+            double clientLatitude = 0.0, clientLongitude = 0.0, serverLatitude = 0.0, serverLongitude = 0.0;
+            SmartGeoLocate(clientIP, ref clientLatitude, ref clientLongitude);
+            SmartGeoLocate(ipThem, ref serverLatitude, ref serverLongitude);
 
             // https://www.simongilbert.net/parallel-haversine-formula-dotnetcore/
             const double EquatorialRadiusOfEarth = 6371D;
@@ -100,9 +127,10 @@ namespace JamFan21.Pages
 
     class ServersForMe
         {
-            public ServersForMe(string ip, int distance) { serverIpAddress = ip; distanceAway = distance; }
+            public ServersForMe(string ip, int distance, int peeps) { serverIpAddress = ip; distanceAway = distance; people = peeps; }
             public string serverIpAddress;
             public int distanceAway;
+            public int people;
         }
 
         public async Task<string> GetGutsRightNow() //
@@ -120,10 +148,24 @@ namespace JamFan21.Pages
                 var serversOnList = System.Text.Json.JsonSerializer.Deserialize<List<JamulusServers>>(LastReportedList[key]);
                 foreach (var server in serversOnList)
                 {
-                    allMyServers.Add(new ServersForMe(server.ip, DistanceFromMe(server.ip)));
+                    int people = 0;
+                    if (server.clients != null) 
+                        people = server.clients.GetLength(0);
+                    allMyServers.Add(new ServersForMe(server.ip, DistanceFromMe(server.ip), people));
+
+                    // hey, coder, if there is anyone on this server, stop iterating so we can reduce requests to geolocate!
+//                    if (people > 0)
+//                        break;
                 }
             }
-            return allMyServers.Count().ToString();
+
+            string output = "";
+            foreach (var s in allMyServers)
+            {
+                if(s.people > 0)
+                    output += " " + s.distanceAway + " " + s.serverIpAddress + " " + s.people;
+            }
+            return output;
         }
 
         public string RightNow
