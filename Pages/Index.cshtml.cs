@@ -172,7 +172,7 @@ namespace JamFan21.Pages
             foreach (var s in sortedByDistanceAway)
             {
                 if (s.people > 1) // more than one please
-                    output += "<tr><td>?<td>" + s.name + "<td>" + s.city + "<td>" + s.serverIpAddress + "<td>" + s.people + "</tr>"; ;
+                    output += "<tr><td>" + s.category + "<td>" + s.name + "<td>" + s.city + "<td>" + s.serverIpAddress + "<td>" + s.people + "</tr>"; ;
             }
             output += "</table>";
             return output;
