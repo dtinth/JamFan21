@@ -21,15 +21,15 @@ namespace JamFan21
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>()
-                    ;
-                    /*
+//                    ;
+//                    /*
                       .UseKestrel(
                         options =>
                         {
                             options.ListenAnyIP(7999);
                         }
                         );
-                    */
+//                    */
                 });
     }
 }
