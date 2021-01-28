@@ -196,6 +196,7 @@ namespace JamFan21.Pages
         {
             get
             {
+                Console.WriteLine("Refresh request..."); 
                 var v = GetGutsRightNow();
                 v.Wait();
                 return v.Result;
