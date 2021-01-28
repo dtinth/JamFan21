@@ -170,7 +170,7 @@ namespace JamFan21.Pages
                         if (slimmerInstrument == "-")
                             slimmerInstrument = "";
 
-                        var newpart = "<b>" + guy.name + "</b>" + " <i>" + slimmerInstrument + "</i>";
+                        var newpart = "<b>" + guy.name + "</b>" + " <i><font size='-1'>" + slimmerInstrument + "</font></i>";
                         newpart = newpart.Replace(" ", "&nbsp;"); // names and instruments have spaces too
                         who = who + newpart + ", ";
                     }
@@ -186,7 +186,7 @@ namespace JamFan21.Pages
             foreach (var s in sortedByDistanceAway)
             {
                 if (s.people > 1) // more than one please
-                    output += "<tr><td>" + s.category + "<td>" + s.name + "<td>" + s.city + "<td>" + s.serverIpAddress + "<td>" + s.people + "<td>" + s.who + "</tr>"; ;
+                    output += "<tr><td>" + s.category + "<td><font size='-1'>" + s.name + "</font><td>" + s.city + "<td><font size='-1'>" + s.serverIpAddress + "</font><td>" + s.people + "<td>" + s.who + "</tr>"; ;
             }
             output += "</table>";
             return output;
