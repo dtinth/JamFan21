@@ -132,13 +132,14 @@ namespace JamFan21.Pages
 
     class ServersForMe
         {
-            public ServersForMe(string cat, string ip, string na, string ci, int distance, int peeps) { category = cat;  serverIpAddress = ip; name = na; city = ci; distanceAway = distance; people = peeps; }
+            public ServersForMe(string cat, string ip, string na, string ci, int distance, int peeps, string w) { category = cat;  serverIpAddress = ip; name = na; city = ci; distanceAway = distance; people = peeps; who = w; }
             public string category;
             public string serverIpAddress;
             public string name;
             public string city;
             public int distanceAway;
             public int people;
+            public string who;
         }
 
         public async Task<string> GetGutsRightNow() //
@@ -162,17 +163,24 @@ namespace JamFan21.Pages
                     if (people < 2)
                         continue; // just fuckin don't care about 0 or even 1?
 
-                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, DistanceFromMe(server.ip), people));
+                    string who = "";
+                    foreach(var guy in server.clients)
+                    {
+                        who = who + "<b>" + guy.name + "</b>" + " <i>" + guy.instrument + "</i>" + " | ";
+                    }
+                    who = who.Substring(0, who.Length - 2); // chop that last pipe!
+
+                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, DistanceFromMe(server.ip), people, who));
                 }
             }
 
             IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
 
-            string output = "<table><th>Category<td>Name<td>City<td>IP Address<td>Musicians</th>";
+            string output = "<table border='1'><th>Category<td>Name<td>City<td>IP Address<td>Musicians<td>Who</th>";
             foreach (var s in sortedByDistanceAway)
             {
                 if (s.people > 1) // more than one please
-                    output += "<tr><td>" + s.category + "<td>" + s.name + "<td>" + s.city + "<td>" + s.serverIpAddress + "<td>" + s.people + "</tr>"; ;
+                    output += "<tr><td>" + s.category + "<td>" + s.name + "<td>" + s.city + "<td>" + s.serverIpAddress + "<td>" + s.people + "<td>" + s.who + "</tr>"; ;
             }
             output += "</table>";
             return output;
