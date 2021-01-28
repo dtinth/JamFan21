@@ -46,11 +46,11 @@ namespace JamFan21.Pages
 
         Dictionary<string, string> JamulusListURLs = new Dictionary<string, string>()
         {
-            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" }
-,            {"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" },
-            { "Genre Rock", "http://jamulus.softins.co.uk/servers.php?central=jamulusrock.fischvolk.de:22424" },
-            { "Genre Jazz", "http://jamulus.softins.co.uk/servers.php?central=jamulusjazz.fischvolk.de:22324" },
-            { "Genre Classical/Folk/Choir", "http://jamulus.softins.co.uk/servers.php?central=jamulusclassical.fischvolk.de:22524" }
+            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" },
+            {"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" }
+            ,{ "Genre Rock", "http://jamulus.softins.co.uk/servers.php?central=jamulusrock.fischvolk.de:22424" }
+            ,{ "Genre Jazz", "http://jamulus.softins.co.uk/servers.php?central=jamulusjazz.fischvolk.de:22324" }
+            ,{ "Genre Classical/Folk/Choir", "http://jamulus.softins.co.uk/servers.php?central=jamulusclassical.fischvolk.de:22524" }
         };
 
         Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
@@ -166,9 +166,15 @@ namespace JamFan21.Pages
                     string who = "";
                     foreach(var guy in server.clients)
                     {
-                        who = who + "<b>" + guy.name + "</b>" + " <i>" + guy.instrument + "</i>" + " | ";
+                        string slimmerInstrument = guy.instrument;
+                        if (slimmerInstrument == "-")
+                            slimmerInstrument = "";
+
+                        var newpart = "<b>" + guy.name + "</b>" + " <i>" + slimmerInstrument + "</i>";
+                        newpart = newpart.Replace(" ", "&nbsp;"); // names and instruments have spaces too
+                        who = who + newpart + ", ";
                     }
-                    who = who.Substring(0, who.Length - 2); // chop that last pipe!
+                    who = who.Substring(0, who.Length - 2); // chop that last comma!
 
                     allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, DistanceFromMe(server.ip), people, who));
                 }
@@ -176,7 +182,7 @@ namespace JamFan21.Pages
 
             IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
 
-            string output = "<table border='1'><th>Category<td>Name<td>City<td>IP Address<td>Musicians<td>Who</th>";
+            string output = "<table border='1'><tr><th>Category<th>Name<th>City<th>IP Address<th>&nbsp;#&nbsp;<th>Who</tr>";
             foreach (var s in sortedByDistanceAway)
             {
                 if (s.people > 1) // more than one please
