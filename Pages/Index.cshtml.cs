@@ -184,7 +184,13 @@ namespace JamFan21.Pages
                         if (slimmerInstrument == "-")
                             slimmerInstrument = "";
 
-                        var newpart = "<b>" + guy.name + "</b>" + " <i><font size='-1'>" + slimmerInstrument + "</font></i>";
+                        if (slimmerInstrument.Length > 0) // if there's no length to instrument, don't add a space for it.
+                            slimmerInstrument = " " + slimmerInstrument;
+
+                        var nam = guy.name.Trim();
+                        nam = nam.Replace("  ", " "); // don't want crazy space names
+
+                        var newpart = "<b>" + nam + "</b>" + "<i><font size='-1'>" + slimmerInstrument + "</font></i>";
                         newpart = newpart.Replace(" ", "&nbsp;"); // names and instruments have spaces too
                         who = who + newpart + ", ";
                     }
