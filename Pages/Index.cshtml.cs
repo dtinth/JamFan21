@@ -46,28 +46,42 @@ namespace JamFan21.Pages
 
         Dictionary<string, string> JamulusListURLs = new Dictionary<string, string>()
         {
-            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" },
-            {"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" }
+            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" }
+            ,{"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" }
             ,{ "Genre Rock", "http://jamulus.softins.co.uk/servers.php?central=jamulusrock.fischvolk.de:22424" }
             ,{ "Genre Jazz", "http://jamulus.softins.co.uk/servers.php?central=jamulusjazz.fischvolk.de:22324" }
             ,{ "Genre Classical/Folk/Choir", "http://jamulus.softins.co.uk/servers.php?central=jamulusclassical.fischvolk.de:22524" }
         };
 
-        Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
-        DateTime? LastReportedListGatheredAt = null;
+        static Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
+        static DateTime? LastReportedListGatheredAt = null;
 
         protected async Task MineLists()
         {
             if (LastReportedListGatheredAt != null)
+            {
                 if (DateTime.Now < LastReportedListGatheredAt.Value.AddSeconds(60))
+                {
+                    Console.WriteLine("Data is less than 60 seconds old, and cached data is adequate.");
                     return; // data we have was gathered within the last minute.
+                }
+            }
+
+            using var client = new HttpClient();
+
+            var serverStates = new Dictionary<string, Task<string>>();
 
             foreach (var key in JamulusListURLs.Keys)
             {
-                using var client = new HttpClient();
-                var serverJson = await client.GetStringAsync(JamulusListURLs[key]);
-                LastReportedList[key] = serverJson;
+                serverStates.Add(key, client.GetStringAsync(JamulusListURLs[key]));
             }
+
+            foreach (var key in JamulusListURLs.Keys)
+            {
+                LastReportedList[key] = serverStates[key].Result;
+            }
+
+            LastReportedListGatheredAt = DateTime.Now;
         }
 
         class CachedGeolocation
