@@ -202,11 +202,11 @@ namespace JamFan21.Pages
 
             IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
 
-            string output = "<table border='1'><tr><th>Category<th>Name<th>City<th>IP Address<th>&nbsp;#&nbsp;<th>Who</tr>";
+            string output = "<table border='1'><tr><th><font size='-1'>Server Address</font><th>Category<th>Name<th>City<th>Who</tr>";
             foreach (var s in sortedByDistanceAway)
             {
                 if (s.people > 1) // more than one please
-                    output += "<tr><td>" + s.category + "<td><font size='-1'>" + s.name + "</font><td>" + s.city + "<td><font size='-1'>" + s.serverIpAddress + "</font><td>" + s.people + "<td>" + s.who + "</tr>"; ;
+                    output += "<tr><td><font size='-1'>" + s.serverIpAddress + "</font><td>" + s.category + "<td><font size='-1'>" + s.name + "</font><td>" + s.city + "<td>" + s.who + "</tr>"; ;
             }
             output += "</table>";
             return output;
