@@ -189,6 +189,8 @@ namespace JamFan21.Pages
 
                         var nam = guy.name.Trim();
                         nam = nam.Replace("  ", " "); // don't want crazy space names
+                        nam = nam.Replace("  ", " "); // don't want crazy space names
+                        nam = nam.Replace("  ", " "); // don't want crazy space names
 
                         var newpart = "<b>" + nam + "</b>" + "<i><font size='-1'>" + slimmerInstrument + "</font></i>";
                         newpart = newpart.Replace(" ", "&nbsp;"); // names and instruments have spaces too
