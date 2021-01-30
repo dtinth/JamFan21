@@ -214,25 +214,31 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
             return output;
         }
 
+        private static System.Threading.Mutex m_serializerMutex = new System.Threading.Mutex();
         public string RightNow
         {
             get
             {
-                string ipaddr = HttpContext.Connection.RemoteIpAddress.ToString();
-                if (ipaddr.Length > 5)
+                m_serializerMutex.WaitOne();
+                try
                 {
-                    Console.Write("Refresh request from ");
-                    IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
-                    GeolocationParams geoParams = new GeolocationParams();
-                    geoParams.SetIPAddress(ipaddr);
-                    geoParams.SetFields("geo,time_zone,currency");
-                    Geolocation geolocation = api.GetGeolocation(geoParams);
-                    Console.WriteLine(geolocation.GetCity());
-                }
+                    string ipaddr = HttpContext.Connection.RemoteIpAddress.ToString();
+                    if (ipaddr.Length > 5)
+                    {
+                        Console.Write("Refresh request from ");
+                        IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
+                        GeolocationParams geoParams = new GeolocationParams();
+                        geoParams.SetIPAddress(ipaddr);
+                        geoParams.SetFields("geo,time_zone,currency");
+                        Geolocation geolocation = api.GetGeolocation(geoParams);
+                        Console.WriteLine(geolocation.GetCity());
+                    }
 
-                var v = GetGutsRightNow();
-                v.Wait();
-                return v.Result;
+                    var v = GetGutsRightNow();
+                    v.Wait();
+                    return v.Result;
+                }
+                finally { m_serializerMutex.ReleaseMutex(); }
             }
             set
             {
