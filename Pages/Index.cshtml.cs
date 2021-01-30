@@ -62,7 +62,7 @@ namespace JamFan21.Pages
             {
                 if (DateTime.Now < LastReportedListGatheredAt.Value.AddSeconds(60))
                 {
-                    Console.WriteLine("Data is less than 60 seconds old, and cached data is adequate.");
+//                    Console.WriteLine("Data is less than 60 seconds old, and cached data is adequate.");
                     return; // data we have was gathered within the last minute.
                 }
             }
