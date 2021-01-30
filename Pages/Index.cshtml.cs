@@ -92,7 +92,7 @@ namespace JamFan21.Pages
             public double longitude;
         }
 
-        Dictionary<string, CachedGeolocation> geocache = new Dictionary<string, CachedGeolocation>();
+static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<string, CachedGeolocation>();
 
         protected void SmartGeoLocate(string ip, ref double latitude, ref double longitude)
         {
