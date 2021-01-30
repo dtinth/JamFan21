@@ -218,7 +218,18 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
         {
             get
             {
-                Console.WriteLine("Refresh request..."); 
+                string ipaddr = HttpContext.Connection.RemoteIpAddress.ToString();
+                if (ipaddr.Length > 5)
+                {
+                    Console.Write("Refresh request from ");
+                    IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
+                    GeolocationParams geoParams = new GeolocationParams();
+                    geoParams.SetIPAddress(ipaddr);
+                    geoParams.SetFields("geo,time_zone,currency");
+                    Geolocation geolocation = api.GetGeolocation(geoParams);
+                    Console.WriteLine(geolocation.GetCity());
+                }
+
                 var v = GetGutsRightNow();
                 v.Wait();
                 return v.Result;
