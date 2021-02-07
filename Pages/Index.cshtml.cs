@@ -109,6 +109,8 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
             }
 
             // don't have cached data, or it's too old.
+            // NOWEVER, THIS SHIT IF OFFLINE
+            /*
             IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
             GeolocationParams geoParams = new GeolocationParams();
             geoParams.SetIPAddress(ip);
@@ -117,6 +119,7 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
             latitude = Convert.ToDouble(geolocation.GetLatitude());
             longitude = Convert.ToDouble(geolocation.GetLongitude());
             geocache[ip] = new CachedGeolocation(DateTime.Now.DayOfYear, latitude, longitude);
+            */
         }
 
         protected int DistanceFromMe(string ipThem)
@@ -146,21 +149,37 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
 
     class ServersForMe
         {
-            public ServersForMe(string cat, string ip, string na, string ci, int distance, int peeps, string w) { category = cat;  serverIpAddress = ip; name = na; city = ci; distanceAway = distance; people = peeps; who = w; }
+            public ServersForMe(string cat, string ip, string na, string ci, int distance, string w, int count) 
+                { category = cat;  serverIpAddress = ip; name = na; city = ci; distanceAway = distance; who = w; usercount = count; }
             public string category;
             public string serverIpAddress;
             public string name;
             public string city;
             public int distanceAway;
-            public int people;
             public string who;
+            public int usercount;
         }
 
-        public async Task<string> GetGutsRightNow() //
+        public string HighlightUserSearchTerms(string str)
+        {
+//            if (0 != string.Compare(str, "sea", true)) // ignore case
+                str = str.Replace("Vero", "<font color='red'>Vero</font>");
+            str = str.Replace("Sea", "<font color='red'>Sea</font>");
+            str = str.Replace("sea", "<font color='red'>sea</font>");
+            str = str.Replace("Rob", "<font color='red'>Rob</font>");
+            str = str.Replace("Rapp", "<font color='red'>Rapp</font>");
+            str = str.Replace("CA", "<font color='red'>CA</font>");
+            str = str.Replace("mcfnord", "<font color='green'>mcfnord</font>");
+            str = str.Replace("Vocal", "<font color='blue'><u>Vocal</u></font>");
+            str = str.Replace("Angeles", "<font color='red'>Angeles</font>", true, null);
+            return str;
+        }
+
+        public async Task<string> GetGutsRightNow() 
         {
             await MineLists();
 
-            // Now for each last reported list, extract all the hmmm servers for now. all them servers by LIST, NAME, CITY, IP ADDRESS, # OF PEOPLE.
+            // Now for each last reported list, extract all the hmmm servers for now. all them servers by LIST, NAME, CITY, IP ADDRESS
             // cuz I wanna add a new var: Every distance to this client!
             // so eager, just get them distances!
 
@@ -174,8 +193,10 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
                     int people = 0;
                     if (server.clients != null)
                         people = server.clients.GetLength(0);
-                    if (people < 2)
-                        continue; // just fuckin don't care about 0 or even 1?
+                    if (people < 1)
+                        continue; // just fuckin don't care about 0 or even 1. MAYBE I DO WANNA NOTICE MY FRIEND ALL ALONE SOMEWHERE THO!!!!
+                    /// EMPTY SERVERS CAN KICK ROCKS
+                    /// SERVERS WITH ONE PERSON MIGHT BE THE PERSON I'M SEARCHING FOR
 
                     string who = "";
                     foreach(var guy in server.clients)
@@ -198,17 +219,21 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
                     }
                     who = who.Substring(0, who.Length - 2); // chop that last comma!
 
-                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, DistanceFromMe(server.ip), people, who));
+                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, DistanceFromMe(server.ip), who, people));
                 }
             }
 
-            IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
+            //IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
+            IEnumerable<ServersForMe> sortedByMusicians = allMyServers.OrderByDescending(svr => svr.usercount);
 
             string output = "<table border='1'><tr><th><font size='-1'>Server Address</font><th>Category<th>Name<th>City<th>Who</tr>";
-            foreach (var s in sortedByDistanceAway)
+            foreach (var s in sortedByMusicians)
             {
-                if (s.people > 1) // more than one please
-                    output += "<tr><td><font size='-1'>" + s.serverIpAddress + "</font><td>" + s.category + "<td><font size='-1'>" + s.name + "</font><td>" + s.city + "<td>" + s.who + "</tr>"; ;
+                var newline = "<tr><td><font size='-1'>" + s.serverIpAddress + "</font><td>" + 
+                    s.category.Replace("Genre ", "") + 
+                    "<td><font size='-1'>" + HighlightUserSearchTerms(s.name) +
+                    "</font><td>" + HighlightUserSearchTerms(s.city) + "<td>" + HighlightUserSearchTerms(s.who) + "</tr>"; ;
+                output += newline; 
             }
             output += "</table>";
             return output;
@@ -222,6 +247,7 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
                 m_serializerMutex.WaitOne();
                 try
                 {
+                    /* no geolocate for now
                     string ipaddr = HttpContext.Connection.RemoteIpAddress.ToString();
                     if (ipaddr.Length > 5)
                     {
@@ -233,6 +259,7 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
                         Geolocation geolocation = api.GetGeolocation(geoParams);
                         Console.WriteLine(geolocation.GetCity());
                     }
+                    */
 
                     var v = GetGutsRightNow();
                     v.Wait();
