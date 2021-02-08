@@ -6,5 +6,9 @@
 <meta http-equiv="refresh" content="125">
 <div class="text-center">
     <h1 class="display-4">JamFan for Jamulus</h1>
-<p> @Html.Raw(@Model.RightNow) </p>
+    <form method="post">
+        <input type="search" name="SearchTerms">
+        <input type="submit" value="Search">
+    </form>
+    <p> @Html.Raw(@Model.RightNow) </p>
 </div>

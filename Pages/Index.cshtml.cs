@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using IPGeolocation;
 using System.Net.Http;
+using Newtonsoft.Json.Linq;
 
 namespace JamFan21.Pages
 {
@@ -40,9 +41,19 @@ namespace JamFan21.Pages
 
         public void OnGet()
         {
-
+            string cookieValueFromReq = Request.Cookies["searchTerms"];
+            SearchTerms = cookieValueFromReq;
         }
 
+        [BindProperty]
+        public string SearchTerms { get; set; }
+        public void OnPost()
+        {
+            Console.WriteLine(SearchTerms);
+            string key = "searchTerms";
+            string value = SearchTerms;
+            Response.Cookies.Append(key, value);
+        }
 
         Dictionary<string, string> JamulusListURLs = new Dictionary<string, string>()
         {
@@ -62,7 +73,7 @@ namespace JamFan21.Pages
             {
                 if (DateTime.Now < LastReportedListGatheredAt.Value.AddSeconds(60))
                 {
-//                    Console.WriteLine("Data is less than 60 seconds old, and cached data is adequate.");
+                    //                    Console.WriteLine("Data is less than 60 seconds old, and cached data is adequate.");
                     return; // data we have was gathered within the last minute.
                 }
             }
@@ -86,21 +97,21 @@ namespace JamFan21.Pages
 
         class CachedGeolocation
         {
-            public CachedGeolocation(int d, double lat, double longi) { queriedThisDay = d;latitude = lat;longitude = longi; }
+            public CachedGeolocation(int d, double lat, double longi) { queriedThisDay = d; latitude = lat; longitude = longi; }
             public int queriedThisDay;
             public double latitude;
             public double longitude;
         }
 
-static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<string, CachedGeolocation>();
+        static Dictionary<string, CachedGeolocation> geocache = new Dictionary<string, CachedGeolocation>();
 
         protected void SmartGeoLocate(string ip, ref double latitude, ref double longitude)
         {
             // for any IP address, use a cached object if it's not too old.
-            if(geocache.ContainsKey(ip))
+            if (geocache.ContainsKey(ip))
             {
                 var cached = geocache[ip];
-                if(cached.queriedThisDay + 1 < DateTime.Now.DayOfYear)
+                if (cached.queriedThisDay + 1 < DateTime.Now.DayOfYear)
                 {
                     latitude = cached.latitude;
                     longitude = cached.longitude;
@@ -120,6 +131,29 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
             longitude = Convert.ToDouble(geolocation.GetLongitude());
             geocache[ip] = new CachedGeolocation(DateTime.Now.DayOfYear, latitude, longitude);
             */
+        }
+
+        protected int DistanceFromMe(string lat, string lon)
+        {
+            // i'm in seattle
+            double clientLatitude = 47.6, clientLongitude = -122.3, serverLatitude = float.Parse(lat), serverLongitude = float.Parse(lon);
+//            SmartGeoLocate(clientIP, ref clientLatitude, ref clientLongitude);
+//            SmartGeoLocate(ipThem, ref serverLatitude, ref serverLongitude);
+
+            // https://www.simongilbert.net/parallel-haversine-formula-dotnetcore/
+            const double EquatorialRadiusOfEarth = 6371D;
+            const double DegreesToRadians = (Math.PI / 180D);
+            var deltalat = (serverLatitude - clientLatitude) * DegreesToRadians;
+            var deltalong = (serverLongitude - clientLongitude) * DegreesToRadians;
+            var a = Math.Pow(
+                Math.Sin(deltalat / 2D), 2D) +
+                Math.Cos(clientLatitude * DegreesToRadians) *
+                Math.Cos(serverLatitude * DegreesToRadians) *
+                Math.Pow(Math.Sin(deltalong / 2D), 2D);
+            var c = 2D * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1D - a));
+            var d = EquatorialRadiusOfEarth * c;
+            return Convert.ToInt32(d);
+
         }
 
         protected int DistanceFromMe(string ipThem)
@@ -162,17 +196,86 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
 
         public string HighlightUserSearchTerms(string str)
         {
-//            if (0 != string.Compare(str, "sea", true)) // ignore case
-                str = str.Replace("Vero", "<font color='red'>Vero</font>");
-            str = str.Replace("Sea", "<font color='red'>Sea</font>");
-            str = str.Replace("sea", "<font color='red'>sea</font>");
-            str = str.Replace("Rob", "<font color='red'>Rob</font>");
-            str = str.Replace("Rapp", "<font color='red'>Rapp</font>");
-            str = str.Replace("CA", "<font color='red'>CA</font>");
-            str = str.Replace("mcfnord", "<font color='green'>mcfnord</font>");
-            str = str.Replace("Vocal", "<font color='blue'><u>Vocal</u></font>");
-            str = str.Replace("Angeles", "<font color='red'>Angeles</font>", true, null);
+            if(SearchTerms != null)
+                if(SearchTerms.Length > 0)
+                {
+                    foreach (var term in SearchTerms.Split(' '))
+                        if(term.Length > 0) // yeah i guess split cares about um two spaces, gives you a blank word yo
+                            str = str.Replace(term, string.Format("<font size='+2' color='green'>{0}</font>", term), true, null); 
+                }
             return str;
+        }
+
+        public class LatLong
+        {
+            public LatLong(string la, string lo) { lat = la; lon = lo; }
+            public string lat;
+            public string lon ;
+        }
+
+        protected static Dictionary<string, LatLong> mapToLatLongs = new Dictionary<string, LatLong>();
+
+        public void PlaceToLatLon(string place, ref string lat, ref string lon, string country)
+        {
+            if (place.Length < 2)
+                return; // not exactly bad, but unkonwn!
+            if (place == "yourCity")
+                return;
+
+            if (mapToLatLongs.ContainsKey(place))
+            {
+                lat = mapToLatLongs[place].lat;
+                lon = mapToLatLongs[place].lon;
+                return;
+            }
+
+            string encodedplace = System.Web.HttpUtility.UrlEncode(place);
+            string endpoint = string.Format("https://api.opencagedata.com/geocode/v1/json?q={0}&key=4fc3b2001d984815a8a691e37a28064c", encodedplace);
+            Console.WriteLine(endpoint);
+            using var client = new HttpClient();
+            System.Threading.Tasks.Task<string> task = client.GetStringAsync(endpoint);
+            task.Wait();
+            string s = task.Result;
+            JObject latLongJson = JObject.Parse(s);
+            string typeOfMatch = (string)latLongJson["results"][0]["components"]["_type"] ;
+            if (("neighbourhood" == typeOfMatch) ||
+                ("village" == typeOfMatch) ||
+                ("city" == typeOfMatch) ||
+                ("county" == typeOfMatch) ||
+                ("municipality" == typeOfMatch) ||
+                ("administrative" == typeOfMatch) ||
+                ("state" == typeOfMatch) ||
+                ("country" == typeOfMatch))
+            {
+                lat = (string)latLongJson["results"][0]["geometry"]["lat"];
+                lon = (string)latLongJson["results"][0]["geometry"]["lng"];
+                mapToLatLongs[place] = new LatLong(lat, lon);
+            }
+            else
+            {
+                // DUMP THIS LATER AND RELY ON THE IPADDR-TO-LATLONG HERE
+                // Try just using the country tehy passed me.
+                /* apparently this can crash me cuz i didn't tweak user entry
+                encodedplace = System.Web.HttpUtility.UrlEncode(country);
+                endpoint = string.Format("https://api.opencagedata.com/geocode/v1/json?q={0}&key=4fc3b2001d984815a8a691e37a28064c", encodedplace);
+                Console.WriteLine(endpoint);
+                task = client.GetStringAsync(endpoint);
+                task.Wait();
+                s = task.Result;
+                latLongJson = JObject.Parse(s);
+                typeOfMatch = (string)latLongJson["results"][0]["components"]["_type"];
+                if ("country" == typeOfMatch)
+                {
+                    lat = (string)latLongJson["results"][0]["geometry"]["lat"];
+                    lon = (string)latLongJson["results"][0]["geometry"]["lng"];
+                    mapToLatLongs[place] = new LatLong(lat, lon);
+                    return;
+                }
+                */
+
+                // Couldn't find anything. do this instead:
+                mapToLatLongs[place] = new LatLong("", ""); 
+            }
         }
 
         public async Task<string> GetGutsRightNow() 
@@ -219,22 +322,58 @@ static         Dictionary<string, CachedGeolocation> geocache = new Dictionary<s
                     }
                     who = who.Substring(0, who.Length - 2); // chop that last comma!
 
-                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, DistanceFromMe(server.ip), who, people));
+                    string lat = "";
+                    string lon = "";
+                    string place = "";
+                    if (server.city.Length > 1)
+                        place = server.city;
+                    if (server.country.Length > 1)
+                    {
+                        if (place.Length > 1)
+                            place += ", ";
+                        place += server.country;
+                    }
+
+                    PlaceToLatLon(place, ref lat, ref lon, server.country);
+
+                    //                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, DistanceFromMe(server.ip), who, people));
+                    int dist = 0;
+                    if (lat.Length > 1 || lon.Length > 1)
+                        dist = DistanceFromMe(lat, lon);
+
+                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, dist, who, people));
                 }
             }
 
-            //IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
-            IEnumerable<ServersForMe> sortedByMusicians = allMyServers.OrderByDescending(svr => svr.usercount);
+            IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
+            //IEnumerable<ServersForMe> sortedByMusicianCount = allMyServers.OrderByDescending(svr => svr.usercount);
 
             string output = "<table border='1'><tr><th><font size='-1'>Server Address</font><th>Category<th>Name<th>City<th>Who</tr>";
-            foreach (var s in sortedByMusicians)
+
+            // First all with more than one musician:
+            foreach (var s in sortedByDistanceAway)
             {
-                var newline = "<tr><td><font size='-1'>" + s.serverIpAddress + "</font><td>" + 
-                    s.category.Replace("Genre ", "") + 
-                    "<td><font size='-1'>" + HighlightUserSearchTerms(s.name) +
-                    "</font><td>" + HighlightUserSearchTerms(s.city) + "<td>" + HighlightUserSearchTerms(s.who) + "</tr>"; ;
-                output += newline; 
+                if (s.usercount > 1)
+                {
+                    var newline = "<tr><td><font size='-1'>" + s.serverIpAddress + "</font><td>" +
+                        s.category.Replace("Genre ", "") +
+                        "<td><font size='-1'>" + HighlightUserSearchTerms(s.name) +
+                        "</font><td>" + HighlightUserSearchTerms(s.city) + "<td>" + HighlightUserSearchTerms(s.who) + "</tr>"; ;
+                    output += newline;
+                }
             }
+            foreach (var s in sortedByDistanceAway)
+            {
+                if (s.usercount == 1)
+                {
+                    var newline = "<tr><td><font size='-1'>" + s.serverIpAddress + "</font><td>" +
+                        s.category.Replace("Genre ", "") +
+                        "<td><font size='-1'>" + HighlightUserSearchTerms(s.name) +
+                        "</font><td>" + HighlightUserSearchTerms(s.city) + "<td>" + HighlightUserSearchTerms(s.who) + "</tr>"; ;
+                    output += newline;
+                }
+            }
+
             output += "</table>";
             return output;
         }
