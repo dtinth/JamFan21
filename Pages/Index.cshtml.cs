@@ -62,6 +62,8 @@ namespace JamFan21.Pages
             ,{ "Genre Rock", "http://jamulus.softins.co.uk/servers.php?central=jamulusrock.fischvolk.de:22424" }
             ,{ "Genre Jazz", "http://jamulus.softins.co.uk/servers.php?central=jamulusjazz.fischvolk.de:22324" }
             ,{ "Genre Classical/Folk/Choir", "http://jamulus.softins.co.uk/servers.php?central=jamulusclassical.fischvolk.de:22524" }
+            ,{ "Genre Barbershop", "http://jamulus.softins.co.uk/servers.php?central=jamuluschoral.fischvolk.de:22724" }
+            ,{ "Genre Any 3", "http://jamulus.softins.co.uk/servers.php?central=jamulusanygenre3.fischvolk.de:22624" }
         };
 
         static Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
@@ -213,69 +215,104 @@ namespace JamFan21.Pages
             public string lon ;
         }
 
-        protected static Dictionary<string, LatLong> mapToLatLongs = new Dictionary<string, LatLong>();
+        protected static Dictionary<string, LatLong> m_PlaceNameToLatLong = new Dictionary<string, LatLong>();
+        protected static Dictionary<string, LatLong> m_ipAddrToLatLong = new Dictionary<string, LatLong>();
 
-        public void PlaceToLatLon(string place, ref string lat, ref string lon, string country)
+        protected static bool CallOpenCage(string placeName, ref string lat, ref string lon)
         {
-            if (place.Length < 2)
-                return; // not exactly bad, but unkonwn!
-            if (place == "yourCity")
-                return;
-
-            if (mapToLatLongs.ContainsKey(place))
-            {
-                lat = mapToLatLongs[place].lat;
-                lon = mapToLatLongs[place].lon;
-                return;
-            }
-
-            string encodedplace = System.Web.HttpUtility.UrlEncode(place);
+            string encodedplace = System.Web.HttpUtility.UrlEncode(placeName);
             string endpoint = string.Format("https://api.opencagedata.com/geocode/v1/json?q={0}&key=4fc3b2001d984815a8a691e37a28064c", encodedplace);
-            Console.WriteLine(endpoint);
             using var client = new HttpClient();
             System.Threading.Tasks.Task<string> task = client.GetStringAsync(endpoint);
             task.Wait();
             string s = task.Result;
             JObject latLongJson = JObject.Parse(s);
-            string typeOfMatch = (string)latLongJson["results"][0]["components"]["_type"] ;
-            if (("neighbourhood" == typeOfMatch) ||
-                ("village" == typeOfMatch) ||
-                ("city" == typeOfMatch) ||
-                ("county" == typeOfMatch) ||
-                ("municipality" == typeOfMatch) ||
-                ("administrative" == typeOfMatch) ||
-                ("state" == typeOfMatch) ||
-                ("country" == typeOfMatch))
+            if (latLongJson["results"].HasValues)
             {
-                lat = (string)latLongJson["results"][0]["geometry"]["lat"];
-                lon = (string)latLongJson["results"][0]["geometry"]["lng"];
-                mapToLatLongs[place] = new LatLong(lat, lon);
-            }
-            else
-            {
-                // DUMP THIS LATER AND RELY ON THE IPADDR-TO-LATLONG HERE
-                // Try just using the country tehy passed me.
-                /* apparently this can crash me cuz i didn't tweak user entry
-                encodedplace = System.Web.HttpUtility.UrlEncode(country);
-                endpoint = string.Format("https://api.opencagedata.com/geocode/v1/json?q={0}&key=4fc3b2001d984815a8a691e37a28064c", encodedplace);
-                Console.WriteLine(endpoint);
-                task = client.GetStringAsync(endpoint);
-                task.Wait();
-                s = task.Result;
-                latLongJson = JObject.Parse(s);
-                typeOfMatch = (string)latLongJson["results"][0]["components"]["_type"];
-                if ("country" == typeOfMatch)
+                string typeOfMatch = (string)latLongJson["results"][0]["components"]["_type"];
+                if (("neighbourhood" == typeOfMatch) ||
+                    ("village" == typeOfMatch) ||
+                    ("city" == typeOfMatch) ||
+                    ("county" == typeOfMatch) ||
+                    ("municipality" == typeOfMatch) ||
+                    ("administrative" == typeOfMatch) ||
+                    ("state" == typeOfMatch) ||
+                    ("boundary" == typeOfMatch) ||
+                    ("country" == typeOfMatch))
                 {
                     lat = (string)latLongJson["results"][0]["geometry"]["lat"];
                     lon = (string)latLongJson["results"][0]["geometry"]["lng"];
-                    mapToLatLongs[place] = new LatLong(lat, lon);
-                    return;
+                    m_PlaceNameToLatLong[placeName] = new LatLong(lat, lon);
+                    Console.WriteLine("Place noted: " + placeName);
+                    return true;
                 }
-                */
-
-                // Couldn't find anything. do this instead:
-                mapToLatLongs[place] = new LatLong("", ""); 
             }
+            return false;
+        }
+
+        public void PlaceToLatLon(string serverPlace, string userPlace, string ipAddr, ref string lat, ref string lon)
+        {
+            if (m_PlaceNameToLatLong.ContainsKey(serverPlace))
+            {
+                lat = m_PlaceNameToLatLong[serverPlace].lat;
+                lon = m_PlaceNameToLatLong[serverPlace].lon;
+                return;
+            }
+
+            if (m_PlaceNameToLatLong.ContainsKey(userPlace))
+            {
+                lat = m_PlaceNameToLatLong[userPlace].lat;
+                lon = m_PlaceNameToLatLong[userPlace].lon;
+                return;
+            }
+
+            if (m_ipAddrToLatLong.ContainsKey(ipAddr))
+            {
+                lat = m_ipAddrToLatLong[ipAddr].lat;
+                lon = m_ipAddrToLatLong[ipAddr].lon;
+                return;
+            }
+
+            if (serverPlace.Length > 1)
+                if (serverPlace!= "yourCity")
+                {
+                    if (CallOpenCage(serverPlace, ref lat, ref lon))
+                        return;
+               }
+
+            // Ok, user country. more general lat long.
+            if (m_PlaceNameToLatLong.ContainsKey(userPlace))
+            {
+                lat = m_PlaceNameToLatLong[userPlace].lat;
+                lon = m_PlaceNameToLatLong[userPlace].lon;
+                return;
+            }
+
+            // didn't find the top user country... ask someone for directions.
+
+            // THE SERVER SELF-REPORT DIDN'T TRANSLATE INTO A LAT-LONG...
+            // SO IF THERE ARE USERS THERE, HARVEST THEIR COUNTRY.
+            {
+                if (CallOpenCage(userPlace, ref lat, ref lon))
+                    return;
+            }
+
+            if (ipAddr.Length > 5)
+            {
+                IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
+                GeolocationParams geoParams = new GeolocationParams();
+                geoParams.SetIPAddress(ipAddr);
+                geoParams.SetFields("geo,time_zone,currency");
+                Geolocation geolocation = api.GetGeolocation(geoParams);
+                Console.WriteLine(ipAddr + " " + geolocation.GetCity());
+                lat = geolocation.GetLatitude();
+                lon = geolocation.GetLongitude();
+                m_ipAddrToLatLong[ipAddr] = new LatLong(lat, lon);
+                return;
+            }
+
+            // Couldn't find anything. do this instead:
+            m_ipAddrToLatLong[ipAddr] = new LatLong("", "");
         }
 
         public async Task<string> GetGutsRightNow() 
@@ -301,6 +338,8 @@ namespace JamFan21.Pages
                     /// EMPTY SERVERS CAN KICK ROCKS
                     /// SERVERS WITH ONE PERSON MIGHT BE THE PERSON I'M SEARCHING FOR
 
+                    List<string> userCountries = new List<string>();
+
                     string who = "";
                     foreach(var guy in server.clients)
                     {
@@ -319,6 +358,8 @@ namespace JamFan21.Pages
                         var newpart = "<b>" + nam + "</b>" + "<i><font size='-1'>" + slimmerInstrument + "</font></i>";
                         newpart = newpart.Replace(" ", "&nbsp;"); // names and instruments have spaces too
                         who = who + newpart + ", ";
+
+                        userCountries.Add(guy.country);
                     }
                     who = who.Substring(0, who.Length - 2); // chop that last comma!
 
@@ -334,7 +375,37 @@ namespace JamFan21.Pages
                         place += server.country;
                     }
 
-                    PlaceToLatLon(place, ref lat, ref lon, server.country);
+                    // usersCountry is the most common country reported by active users.
+                    //var sorted = userCountries.GroupBy(v => v).OrderByDescending(g => g.Count());
+
+                    var nameGroup = userCountries.GroupBy(x => x);
+                    var maxCount = nameGroup.Max(g => g.Count());
+                    var mostCommons = nameGroup.Where(x => x.Count() == maxCount).Select(x => x.Key).ToArray();
+                    string usersCountry = mostCommons[0];
+
+
+                    List<string> cities = new List<string>();
+                    foreach (var guy in server.clients)
+                    {
+                        if (guy.country == usersCountry)
+                            cities.Add(guy.city);
+                    }
+                    var citiGroup = cities.GroupBy(x => x);
+                    var maxCountr = citiGroup.Max(g => g.Count());
+                    var mostCommonCity = citiGroup.Where(x => x.Count() == maxCountr).Select(x => x.Key).ToArray();
+                    string usersCity = mostCommonCity[0];
+
+                    string usersPlace = usersCountry;
+                    if(usersCity.Length > 1)
+                        usersPlace = usersCity + ", " + usersCountry;
+                    usersCountry = null;
+
+                        // Ideally, if the users also reveal a city most common among that country, we should add it.
+
+                        //                    IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
+                        /// xxx 
+
+                        PlaceToLatLon(place, usersPlace, server.ip, ref lat, ref lon);
 
                     //                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, DistanceFromMe(server.ip), who, people));
                     int dist = 0;
