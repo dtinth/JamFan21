@@ -220,6 +220,8 @@ namespace JamFan21.Pages
 
         protected static bool CallOpenCage(string placeName, ref string lat, ref string lon)
         {
+            if (placeName.Length < 3)
+                return false;
             string encodedplace = System.Web.HttpUtility.UrlEncode(placeName);
             string endpoint = string.Format("https://api.opencagedata.com/geocode/v1/json?q={0}&key=4fc3b2001d984815a8a691e37a28064c", encodedplace);
             using var client = new HttpClient();
@@ -243,7 +245,6 @@ namespace JamFan21.Pages
                     lat = (string)latLongJson["results"][0]["geometry"]["lat"];
                     lon = (string)latLongJson["results"][0]["geometry"]["lng"];
                     m_PlaceNameToLatLong[placeName] = new LatLong(lat, lon);
-                    Console.WriteLine("Place noted: " + placeName);
                     return true;
                 }
             }
@@ -277,7 +278,11 @@ namespace JamFan21.Pages
                 if (serverPlace!= "yourCity")
                 {
                     if (CallOpenCage(serverPlace, ref lat, ref lon))
+                    {
+                        Console.WriteLine("Successful using server location: " + serverPlace);
                         return;
+                    }
+                    Console.WriteLine("Unsuccessful using server location: " + serverPlace);
                }
 
             // Ok, user country. more general lat long.
@@ -293,8 +298,13 @@ namespace JamFan21.Pages
             // THE SERVER SELF-REPORT DIDN'T TRANSLATE INTO A LAT-LONG...
             // SO IF THERE ARE USERS THERE, HARVEST THEIR COUNTRY.
             {
-                if (CallOpenCage(userPlace, ref lat, ref lon))
-                    return;
+//                if( userPlace.Contains(","))
+                    if (CallOpenCage(userPlace, ref lat, ref lon))
+                    {
+                        Console.WriteLine("Successful using user location: " + userPlace);
+                        return;
+                    }
+                Console.WriteLine("Unsuccessful using user location: " + userPlace);
             }
 
             if (ipAddr.Length > 5)
