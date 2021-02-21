@@ -49,7 +49,7 @@ namespace JamFan21.Pages
         public string SearchTerms { get; set; }
         public void OnPost()
         {
-            Console.WriteLine(SearchTerms);
+            Console.WriteLine("Someone's search terms: " + SearchTerms);
             string key = "searchTerms";
             string value = SearchTerms;
             Response.Cookies.Append(key, value);
@@ -244,7 +244,7 @@ namespace JamFan21.Pages
                 {
                     lat = (string)latLongJson["results"][0]["geometry"]["lat"];
                     lon = (string)latLongJson["results"][0]["geometry"]["lng"];
-                    m_PlaceNameToLatLong[placeName] = new LatLong(lat, lon);
+                    m_PlaceNameToLatLong[placeName.ToUpper()] = new LatLong(lat, lon);
                     return true;
                 }
             }
@@ -253,6 +253,9 @@ namespace JamFan21.Pages
 
         public void PlaceToLatLon(string serverPlace, string userPlace, string ipAddr, ref string lat, ref string lon)
         {
+            System.Diagnostics.Debug.Assert(serverPlace.ToUpper() == serverPlace);
+            System.Diagnostics.Debug.Assert(userPlace.ToUpper() == userPlace);
+
             if (m_PlaceNameToLatLong.ContainsKey(serverPlace))
             {
                 lat = m_PlaceNameToLatLong[serverPlace].lat;
@@ -279,10 +282,10 @@ namespace JamFan21.Pages
                 {
                     if (CallOpenCage(serverPlace, ref lat, ref lon))
                     {
-                        Console.WriteLine("Successful using server location: " + serverPlace);
+                        Console.WriteLine("Used server location: " + serverPlace);
                         return;
                     }
-                    Console.WriteLine("Unsuccessful using server location: " + serverPlace);
+                    Console.WriteLine("Server location failed: " + serverPlace);
                }
 
             // Ok, user country. more general lat long.
@@ -301,10 +304,10 @@ namespace JamFan21.Pages
 //                if( userPlace.Contains(","))
                     if (CallOpenCage(userPlace, ref lat, ref lon))
                     {
-                        Console.WriteLine("Successful using user location: " + userPlace);
+                        Console.WriteLine("Used user location: " + userPlace);
                         return;
                     }
-                Console.WriteLine("Unsuccessful using user location: " + userPlace);
+                Console.WriteLine("User location failed: " + userPlace);
             }
 
             if (ipAddr.Length > 5)
@@ -369,7 +372,7 @@ namespace JamFan21.Pages
                         newpart = newpart.Replace(" ", "&nbsp;"); // names and instruments have spaces too
                         who = who + newpart + ", ";
 
-                        userCountries.Add(guy.country);
+                        userCountries.Add(guy.country.ToUpper());
                     }
                     who = who.Substring(0, who.Length - 2); // chop that last comma!
 
@@ -397,13 +400,20 @@ namespace JamFan21.Pages
                     List<string> cities = new List<string>();
                     foreach (var guy in server.clients)
                     {
-                        if (guy.country == usersCountry)
-                            cities.Add(guy.city);
+                        if (guy.country.ToUpper() == usersCountry)
+                            if(guy.city.Length > 0)
+                                cities.Add(guy.city.ToUpper());
                     }
-                    var citiGroup = cities.GroupBy(x => x);
-                    var maxCountr = citiGroup.Max(g => g.Count());
-                    var mostCommonCity = citiGroup.Where(x => x.Count() == maxCountr).Select(x => x.Key).ToArray();
-                    string usersCity = mostCommonCity[0];
+
+                    string usersCity = "";
+                    if (cities.Count > 0)
+                    {
+                        var citiGroup = cities.GroupBy(x => x);
+                        var maxCountr = citiGroup.Max(g => g.Count());
+                        var mostCommonCity = citiGroup.Where(x => x.Count() == maxCountr).Select(x => x.Key).ToArray();
+                        if (mostCommonCity.GetLength(0) > 0)
+                            usersCity = mostCommonCity[0];
+                    }
 
                     string usersPlace = usersCountry;
                     if(usersCity.Length > 1)
@@ -415,7 +425,7 @@ namespace JamFan21.Pages
                         //                    IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
                         /// xxx 
 
-                        PlaceToLatLon(place, usersPlace, server.ip, ref lat, ref lon);
+                        PlaceToLatLon(place.ToUpper(), usersPlace.ToUpper(), server.ip, ref lat, ref lon);
 
                     //                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, DistanceFromMe(server.ip), who, people));
                     int dist = 0;
