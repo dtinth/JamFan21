@@ -123,7 +123,7 @@ namespace JamFan21.Pages
 
             // don't have cached data, or it's too old.
             // NOWEVER, THIS SHIT IF OFFLINE
-            /*
+
             IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
             GeolocationParams geoParams = new GeolocationParams();
             geoParams.SetIPAddress(ip);
@@ -132,15 +132,24 @@ namespace JamFan21.Pages
             latitude = Convert.ToDouble(geolocation.GetLatitude());
             longitude = Convert.ToDouble(geolocation.GetLongitude());
             geocache[ip] = new CachedGeolocation(DateTime.Now.DayOfYear, latitude, longitude);
-            */
         }
 
-        protected int DistanceFromMe(string lat, string lon)
+//        protected static Dictionary<string, LatLong> m_ipAddrToLatLong = new Dictionary<string, LatLong>();
+
+
+        protected int DistanceFromClient(string lat, string lon)
         {
-            // i'm in seattle
-            double clientLatitude = 47.6, clientLongitude = -122.3, serverLatitude = float.Parse(lat), serverLongitude = float.Parse(lon);
-//            SmartGeoLocate(clientIP, ref clientLatitude, ref clientLongitude);
-//            SmartGeoLocate(ipThem, ref serverLatitude, ref serverLongitude);
+            var serverLatitude = float.Parse(lat);
+            var serverLongitude = float.Parse(lon);
+
+            string clientIP = HttpContext.Connection.RemoteIpAddress.ToString();
+            if (clientIP.Length < 5)
+                clientIP = "104.215.148.63"; //microsoft as test 
+            double clientLatitude = 0.0;
+            double clientLongitude = 0.0;
+            SmartGeoLocate(clientIP, ref clientLatitude, ref clientLongitude);
+
+            //            SmartGeoLocate(ipThem, ref serverLatitude, ref serverLongitude);
 
             // https://www.simongilbert.net/parallel-haversine-formula-dotnetcore/
             const double EquatorialRadiusOfEarth = 6371D;
@@ -158,6 +167,7 @@ namespace JamFan21.Pages
 
         }
 
+        /*
         protected int DistanceFromMe(string ipThem)
         {
             string clientIP = HttpContext.Connection.RemoteIpAddress.ToString();
@@ -182,6 +192,7 @@ namespace JamFan21.Pages
             var d = EquatorialRadiusOfEarth * c;
             return Convert.ToInt32(d);
         }
+        */
 
     class ServersForMe
         {
@@ -430,7 +441,7 @@ namespace JamFan21.Pages
                     //                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, DistanceFromMe(server.ip), who, people));
                     int dist = 0;
                     if (lat.Length > 1 || lon.Length > 1)
-                        dist = DistanceFromMe(lat, lon);
+                        dist = DistanceFromClient(lat, lon);
 
                     allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, dist, who, people));
                 }
