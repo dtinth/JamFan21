@@ -97,26 +97,33 @@ namespace JamFan21.Pages
             LastReportedListGatheredAt = DateTime.Now;
         }
 
+        /*
         class CachedGeolocation
         {
-            public CachedGeolocation(int d, double lat, double longi) { queriedThisDay = d; latitude = lat; longitude = longi; }
-            public int queriedThisDay;
+            public CachedGeolocation(int d, double lat, double longi) 
+            { 
+            //    queriedThisDay = d; 
+                latitude = lat; 
+                longitude = longi; 
+            }
+//            public int queriedThisDay;
             public double latitude;
             public double longitude;
         }
+        */
 
-        static Dictionary<string, CachedGeolocation> geocache = new Dictionary<string, CachedGeolocation>();
+//        static Dictionary<string, CachedGeolocation> geocache = new Dictionary<string, CachedGeolocation>();
 
         protected void SmartGeoLocate(string ip, ref double latitude, ref double longitude)
         {
             // for any IP address, use a cached object if it's not too old.
-            if (geocache.ContainsKey(ip))
+            if (m_ipAddrToLatLong.ContainsKey(ip))
             {
-                var cached = geocache[ip];
-                if (cached.queriedThisDay + 1 < DateTime.Now.DayOfYear)
+                var cached = m_ipAddrToLatLong[ip];
+//                if (cached.queriedThisDay + 1 < DateTime.Now.DayOfYear)
                 {
-                    latitude = cached.latitude;
-                    longitude = cached.longitude;
+                    latitude = double.Parse(cached.lat);
+                    longitude = double.Parse(cached.lon);
                     return;
                 }
             }
@@ -131,7 +138,8 @@ namespace JamFan21.Pages
             Geolocation geolocation = api.GetGeolocation(geoParams);
             latitude = Convert.ToDouble(geolocation.GetLatitude());
             longitude = Convert.ToDouble(geolocation.GetLongitude());
-            geocache[ip] = new CachedGeolocation(DateTime.Now.DayOfYear, latitude, longitude);
+            m_ipAddrToLatLong[ip] = new LatLong(latitude.ToString(), longitude.ToString());
+            Console.WriteLine("A client IP has been cached: " + ip);
         }
 
 //        protected static Dictionary<string, LatLong> m_ipAddrToLatLong = new Dictionary<string, LatLong>();
@@ -332,6 +340,7 @@ namespace JamFan21.Pages
                 lat = geolocation.GetLatitude();
                 lon = geolocation.GetLongitude();
                 m_ipAddrToLatLong[ipAddr] = new LatLong(lat, lon);
+                Console.WriteLine("AN IP geo has been cached.");
                 return;
             }
 
