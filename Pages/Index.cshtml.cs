@@ -131,7 +131,7 @@ namespace JamFan21.Pages
             // don't have cached data, or it's too old.
             // NOWEVER, THIS SHIT IF OFFLINE
 
-            IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
+            IPGeolocationAPI api = new IPGeolocationAPI("9ba2837bd2c24c1fa2536ac2a259b6ad");
             GeolocationParams geoParams = new GeolocationParams();
             geoParams.SetIPAddress(ip);
             geoParams.SetFields("geo,time_zone,currency");
@@ -331,7 +331,7 @@ namespace JamFan21.Pages
 
             if (ipAddr.Length > 5)
             {
-                IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
+                IPGeolocationAPI api = new IPGeolocationAPI("9ba2837bd2c24c1fa2536ac2a259b6ad");
                 GeolocationParams geoParams = new GeolocationParams();
                 geoParams.SetIPAddress(ipAddr);
                 geoParams.SetFields("geo,time_zone,currency");
