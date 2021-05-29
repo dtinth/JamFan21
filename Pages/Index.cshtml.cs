@@ -57,13 +57,13 @@ namespace JamFan21.Pages
 
         Dictionary<string, string> JamulusListURLs = new Dictionary<string, string>()
         {
-             {"Any Genre 1 (or Default)", "http://explorer.jamulus.io/servers.php?central=anygenre1.jamulus.io:22124" }
-,{"Any Genre 2 (or All Genres)", "http://explorer.jamulus.io/servers.php?central=anygenre2.jamulus.io:22224" }
-,{"Any Genre 3", "http://explorer.jamulus.io/servers.php?central=anygenre3.jamulus.io:22624" }
-,{"Rock", "http://explorer.jamulus.io/servers.php?central=rock.jamulus.io:22424" }
-,{"Jazz",  "http://explorer.jamulus.io/servers.php?central=jazz.jamulus.io:22324" }
-,{"Genre Classical/Folk",  "http://explorer.jamulus.io/servers.php?central=classical.jamulus.io:22524" }
-,{"Genre Choral/Barbershop", "http://explorer.jamulus.io/servers.php?central=choral.jamulus.io:22724" }
+            {"Any Genre 1", "http://jamulus.softins.co.uk/servers.php?central=anygenre1.jamulus.io:22124" }
+            ,{"Any Genre 2", "http://jamulus.softins.co.uk/servers.php?central=anygenre2.jamulus.io:22224" }
+            ,{"Any Genre 3", "http://jamulus.softins.co.uk/servers.php?central=anygenre3.jamulus.io:22624" }
+            ,{"Genre Rock",  "http://jamulus.softins.co.uk/servers.php?central=rock.jamulus.io:22424" }
+            ,{"Genre Jazz",  "http://jamulus.softins.co.uk/servers.php?central=jazz.jamulus.io:22324" }
+            ,{"Genre Classical/Folk",  "http://jamulus.softins.co.uk/servers.php?central=classical.jamulus.io:22524" }
+            ,{"Genre Choral/BBShop",  "http://jamulus.softins.co.uk/servers.php?central=choral.jamulus.io:22724" }
         };
 
         static Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
@@ -131,7 +131,7 @@ namespace JamFan21.Pages
             // don't have cached data, or it's too old.
             // NOWEVER, THIS SHIT IF OFFLINE
 
-            IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
+            IPGeolocationAPI api = new IPGeolocationAPI("9ba2837bd2c24c1fa2536ac2a259b6ad");
             GeolocationParams geoParams = new GeolocationParams();
             geoParams.SetIPAddress(ip);
             geoParams.SetFields("geo,time_zone,currency");
@@ -139,7 +139,7 @@ namespace JamFan21.Pages
             latitude = Convert.ToDouble(geolocation.GetLatitude());
             longitude = Convert.ToDouble(geolocation.GetLongitude());
             m_ipAddrToLatLong[ip] = new LatLong(latitude.ToString(), longitude.ToString());
-            Console.WriteLine("A client IP has been cached: " + ip);
+            Console.WriteLine("A client IP has been cached: " + ip + " " + geolocation.GetCity());
         }
 
 //        protected static Dictionary<string, LatLong> m_ipAddrToLatLong = new Dictionary<string, LatLong>();
@@ -335,7 +335,7 @@ namespace JamFan21.Pages
 
             if (ipAddr.Length > 5)
             {
-                IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
+                IPGeolocationAPI api = new IPGeolocationAPI("9ba2837bd2c24c1fa2536ac2a259b6ad");
                 GeolocationParams geoParams = new GeolocationParams();
                 geoParams.SetIPAddress(ipAddr);
                 geoParams.SetFields("geo,time_zone,currency");
