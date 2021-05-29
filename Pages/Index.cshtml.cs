@@ -57,13 +57,13 @@ namespace JamFan21.Pages
 
         Dictionary<string, string> JamulusListURLs = new Dictionary<string, string>()
         {
-            {"Default", "http://jamulus.softins.co.uk/servers.php?central=jamulus.fischvolk.de:22124" }
-            ,{"All Genres", "http://jamulus.softins.co.uk/servers.php?central=jamulusallgenres.fischvolk.de:22224" }
-            ,{ "Genre Rock", "http://jamulus.softins.co.uk/servers.php?central=jamulusrock.fischvolk.de:22424" }
-            ,{ "Genre Jazz", "http://jamulus.softins.co.uk/servers.php?central=jamulusjazz.fischvolk.de:22324" }
-            ,{ "Genre Classical/Folk/Choir", "http://jamulus.softins.co.uk/servers.php?central=jamulusclassical.fischvolk.de:22524" }
-            ,{ "Genre Barbershop", "http://jamulus.softins.co.uk/servers.php?central=jamuluschoral.fischvolk.de:22724" }
-            ,{ "Genre Any 3", "http://jamulus.softins.co.uk/servers.php?central=jamulusanygenre3.fischvolk.de:22624" }
+             {"Any Genre 1 (or Default)", "http://explorer.jamulus.io/servers.php?central=anygenre1.jamulus.io:22124" }
+,{"Any Genre 2 (or All Genres)", "http://explorer.jamulus.io/servers.php?central=anygenre2.jamulus.io:22224" }
+,{"Any Genre 3", "http://explorer.jamulus.io/servers.php?central=anygenre3.jamulus.io:22624" }
+,{"Rock", "http://explorer.jamulus.io/servers.php?central=rock.jamulus.io:22424" }
+,{"Jazz",  "http://explorer.jamulus.io/servers.php?central=jazz.jamulus.io:22324" }
+,{"Genre Classical/Folk",  "http://explorer.jamulus.io/servers.php?central=classical.jamulus.io:22524" }
+,{"Genre Choral/Barbershop", "http://explorer.jamulus.io/servers.php?central=choral.jamulus.io:22724" }
         };
 
         static Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
@@ -272,6 +272,10 @@ namespace JamFan21.Pages
 
         public void PlaceToLatLon(string serverPlace, string userPlace, string ipAddr, ref string lat, ref string lon)
         {
+            ipAddr = ipAddr.Trim();
+            serverPlace = serverPlace.Trim();
+            userPlace = userPlace.Trim();
+
             System.Diagnostics.Debug.Assert(serverPlace.ToUpper() == serverPlace);
             System.Diagnostics.Debug.Assert(userPlace.ToUpper() == userPlace);
 
