@@ -39,20 +39,26 @@ namespace JamFan21.Pages
             _logger = logger;
         }
 
+        public const string SEARCH_TERMS = "searchTerms";
+
         public void OnGet()
         {
-            string cookieValueFromReq = Request.Cookies["searchTerms"];
-            SearchTerms = cookieValueFromReq;
+            SearchTerms = Request.Cookies[SEARCH_TERMS];
         }
 
         [BindProperty]
         public string SearchTerms { get; set; }
         public void OnPost()
         {
-            Console.WriteLine("Someone's search terms: " + SearchTerms);
-            string key = "searchTerms";
-            string value = SearchTerms;
-            Response.Cookies.Append(key, value);
+            if (null != SearchTerms)
+            {
+                Console.WriteLine("Someone's search terms: " + SearchTerms);
+                string key = SEARCH_TERMS;
+                Response.Cookies.Delete(key);
+                Response.Cookies.Append(key, SearchTerms);
+                Console.WriteLine("Append called.");
+                //            RedirectToPage(".");
+            }
         }
 
         Dictionary<string, string> JamulusListURLs = new Dictionary<string, string>()

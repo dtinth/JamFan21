@@ -7,7 +7,7 @@
 <div class="text-center">
     <h1 class="display-4">JamFan for Jamulus</h1>
     <form method="post">
-        <input type="search" name="SearchTerms">
+        <input type="search" name="SearchTerms" value="@Request.Cookies[IndexModel.SEARCH_TERMS]">
         <input type="submit" value="Search">
     </form>
     <p> @Html.Raw(@Model.RightNow) </p>
