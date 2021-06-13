@@ -130,6 +130,7 @@ namespace JamFan21.Pages
                 {
                     latitude = double.Parse(cached.lat);
                     longitude = double.Parse(cached.lon);
+//Console.Write("."); //an actual user refresh so let's see a visual indication
                     return;
                 }
             }
@@ -469,7 +470,7 @@ namespace JamFan21.Pages
             IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
             //IEnumerable<ServersForMe> sortedByMusicianCount = allMyServers.OrderByDescending(svr => svr.usercount);
 
-            string output = "<table border='1'><tr><th><font size='-1'>Server Address</font><th>Category<th>Name<th>City<th>Who</tr>";
+            string output = "<table border='1'><tr><th><font size='-1'>Server Address</font><th>List<th>Name<th>City<th>Who</tr>";
 
             // First all with more than one musician:
             foreach (var s in sortedByDistanceAway)

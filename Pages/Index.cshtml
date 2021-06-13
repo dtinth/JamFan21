@@ -1,14 +1,14 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "JamFan for Jamulus";
+    ViewData["Title"] = "JamFan";
 }
 <meta http-equiv="refresh" content="125">
 <div class="text-center">
     <h1 class="display-4">JamFan for Jamulus</h1>
     <form method="post">
-        <input type="search" name="SearchTerms" value="@Request.Cookies[IndexModel.SEARCH_TERMS]">
-        <input type="submit" value="Search">
+        <input type="search" name="SearchTerms" size="50" value="@Request.Cookies[IndexModel.SEARCH_TERMS]">
+        <input type="submit" value="Track">
     </form>
     <p> @Html.Raw(@Model.RightNow) </p>
 </div>
