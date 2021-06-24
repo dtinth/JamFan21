@@ -53,9 +53,8 @@ namespace JamFan21.Pages
             if (null != SearchTerms)
             {
                 Console.WriteLine("Someone's search terms: " + SearchTerms);
-                string key = SEARCH_TERMS;
-                Response.Cookies.Delete(key);
-                Response.Cookies.Append(key, SearchTerms);
+                Response.Cookies.Delete(SEARCH_TERMS);
+                Response.Cookies.Append(SEARCH_TERMS, SearchTerms);
                 Console.WriteLine("Append called.");
                 //            RedirectToPage(".");
             }
