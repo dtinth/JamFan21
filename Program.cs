@@ -21,8 +21,8 @@ namespace JamFan21
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>()
-                    ;
-                    /*
+//                    ;
+  //                  /*
                       .UseKestrel(
                         options =>
                         {
@@ -30,7 +30,7 @@ namespace JamFan21
 // options.ListenAnyIP(7998, listenOptions => {   listenOptions.UseHttps("mycert.pfx", "password"); }); 
                         }
                         );
-                    */
+    //                */
                 });
     }
 }
