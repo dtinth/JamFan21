@@ -68,7 +68,7 @@ namespace JamFan21.Pages
             ,{"Genre Rock",  "http://jamulus.softins.co.uk/servers.php?central=rock.jamulus.io:22424" }
             ,{"Genre Jazz",  "http://jamulus.softins.co.uk/servers.php?central=jazz.jamulus.io:22324" }
             ,{"Genre Classical/Folk",  "http://jamulus.softins.co.uk/servers.php?central=classical.jamulus.io:22524" }
-            ,{"Genre Choral/BBShop",  "http://jamulus.softins.co.uk/servers.php?central=choral.jamulus.io:22724" }
+            ,{"Genre Choral/BBShop",  "http://jamulus.softins.co.uk/servers.php?central=choral.jamulus.io:22724" } 
         };
 
         static Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
@@ -469,15 +469,15 @@ namespace JamFan21.Pages
             IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
             //IEnumerable<ServersForMe> sortedByMusicianCount = allMyServers.OrderByDescending(svr => svr.usercount);
 
-            string output = "<table border='1'><tr><th><font size='-1'>Server Address</font><th>List<th>Name<th>City<th>Who</tr>";
+            string output = "<table border='1'><tr><th>List<th>Name<th>City<th>Who</tr>";
 
             // First all with more than one musician:
             foreach (var s in sortedByDistanceAway)
             {
                 if (s.usercount > 1)
                 {
-                    var newline = "<tr><td><font size='-1'>" + s.serverIpAddress + "</font><td>" +
-                        s.category.Replace("Genre ", "") +
+                    var newline = "<tr><td>" +
+                        s.category.Replace("Genre ", "").Replace(" ", "&nbsp;") +
                         "<td><font size='-1'>" + HighlightUserSearchTerms(s.name) +
                         "</font><td>" + HighlightUserSearchTerms(s.city) + "<td>" + HighlightUserSearchTerms(s.who) + "</tr>"; ;
                     output += newline;
@@ -487,8 +487,8 @@ namespace JamFan21.Pages
             {
                 if (s.usercount == 1)
                 {
-                    var newline = "<tr><td><font size='-1'>" + s.serverIpAddress + "</font><td>" +
-                        s.category.Replace("Genre ", "") +
+                    var newline = "<tr><td>" +
+                        s.category.Replace("Genre ", "").Replace(" ", "&nbsp;") +
                         "<td><font size='-1'>" + HighlightUserSearchTerms(s.name) +
                         "</font><td>" + HighlightUserSearchTerms(s.city) + "<td>" + HighlightUserSearchTerms(s.who) + "</tr>"; ;
                     output += newline;
