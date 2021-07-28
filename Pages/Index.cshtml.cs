@@ -499,6 +499,8 @@ namespace JamFan21.Pages
             return output;
         }
 
+        private static Dictionary<string, DateTime> clientIPLastVisit = new Dictionary<string, DateTime>();
+
         private static System.Threading.Mutex m_serializerMutex = new System.Threading.Mutex();
         public string RightNow
         {
@@ -507,8 +509,8 @@ namespace JamFan21.Pages
                 m_serializerMutex.WaitOne();
                 try
                 {
-                    /* no geolocate for now
                     string ipaddr = HttpContext.Connection.RemoteIpAddress.ToString();
+
                     if (ipaddr.Length > 5)
                     {
                         Console.Write("Refresh request from ");
@@ -518,8 +520,18 @@ namespace JamFan21.Pages
                         geoParams.SetFields("geo,time_zone,currency");
                         Geolocation geolocation = api.GetGeolocation(geoParams);
                         Console.WriteLine(geolocation.GetCity());
+
+                        // Visually indicate if we last heard from this ipaddr
+                        // after about 125 seconds has elapsed
+                        if(clientIPLastVisit.ContainsKey(ipaddr))
+                        {
+                            var lastRefresh = clientIPLastVisit[ipaddr];
+                            if (DateTime.Now < lastRefresh.AddSeconds(135))
+                                if (DateTime.Now > lastRefresh.AddSeconds(115))
+                                    Console.Write(".");
+                        }
+                        clientIPLastVisit[ipaddr] = DateTime.Now;
                     }
-                    */
 
                     var v = GetGutsRightNow();
                     v.Wait();
