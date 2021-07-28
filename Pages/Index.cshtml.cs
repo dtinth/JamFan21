@@ -469,7 +469,7 @@ namespace JamFan21.Pages
             IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
             //IEnumerable<ServersForMe> sortedByMusicianCount = allMyServers.OrderByDescending(svr => svr.usercount);
 
-            string output = "<table border='1'><tr><th>List<th>Name<th>City<th>Who</tr>";
+            string output = "<table border='1'><tr><u><th>Genre<th>Name<th>City<th>Who</u></tr>";
 
             // First all with more than one musician:
             foreach (var s in sortedByDistanceAway)
