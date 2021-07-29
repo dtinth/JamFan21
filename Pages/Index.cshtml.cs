@@ -137,7 +137,7 @@ namespace JamFan21.Pages
             // don't have cached data, or it's too old.
             // NOWEVER, THIS SHIT IF OFFLINE
 
-            IPGeolocationAPI api = new IPGeolocationAPI("9ba2837bd2c24c1fa2536ac2a259b6ad");
+            IPGeolocationAPI api = new IPGeolocationAPI("79fdbc34bdbd42f8aa3e14896598c40e");
             GeolocationParams geoParams = new GeolocationParams();
             geoParams.SetIPAddress(ip);
             geoParams.SetFields("geo,time_zone,currency");
@@ -341,7 +341,7 @@ namespace JamFan21.Pages
 
             if (ipAddr.Length > 5)
             {
-                IPGeolocationAPI api = new IPGeolocationAPI("9ba2837bd2c24c1fa2536ac2a259b6ad");
+                IPGeolocationAPI api = new IPGeolocationAPI("79fdbc34bdbd42f8aa3e14896598c40e");
                 GeolocationParams geoParams = new GeolocationParams();
                 geoParams.SetIPAddress(ipAddr);
                 geoParams.SetFields("geo,time_zone,currency");
@@ -513,13 +513,13 @@ namespace JamFan21.Pages
 
                     if (ipaddr.Length > 5)
                     {
-                        Console.Write("Refresh request from ");
-                        IPGeolocationAPI api = new IPGeolocationAPI("7b09ec85eaa84128b48121ccba8cec2a");
+                        IPGeolocationAPI api = new IPGeolocationAPI("79fdbc34bdbd42f8aa3e14896598c40e");
                         GeolocationParams geoParams = new GeolocationParams();
                         geoParams.SetIPAddress(ipaddr);
                         geoParams.SetFields("geo,time_zone,currency");
                         Geolocation geolocation = api.GetGeolocation(geoParams);
-                        Console.WriteLine(geolocation.GetCity());
+                        Console.Write("Refresh request from ");
+                        Console.Write(geolocation.GetCity());
 
                         // Visually indicate if we last heard from this ipaddr
                         // after about 125 seconds has elapsed
@@ -528,9 +528,11 @@ namespace JamFan21.Pages
                             var lastRefresh = clientIPLastVisit[ipaddr];
                             if (DateTime.Now < lastRefresh.AddSeconds(135))
                                 if (DateTime.Now > lastRefresh.AddSeconds(115))
-                                    Console.Write(".");
+                                    Console.Write(" (real jamfan)");
                         }
                         clientIPLastVisit[ipaddr] = DateTime.Now;
+
+Console.WriteLine();
                     }
 
                     var v = GetGutsRightNow();
