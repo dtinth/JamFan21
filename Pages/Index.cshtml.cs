@@ -626,7 +626,7 @@ namespace JamFan21.Pages
                             var lastRefresh = clientIPLastVisit[ipaddr];
                             if (DateTime.Now < lastRefresh.AddSeconds(135))
                                 if (DateTime.Now > lastRefresh.AddSeconds(115))
-                                    Console.Write(" (real jamfan)");
+                                    Console.Write(" :)");
                         }
                         clientIPLastVisit[ipaddr] = DateTime.Now;
 
