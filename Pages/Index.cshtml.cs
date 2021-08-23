@@ -62,13 +62,13 @@ namespace JamFan21.Pages
 
         Dictionary<string, string> JamulusListURLs = new Dictionary<string, string>()
         {
-            {"Any Genre 1", "http://jamulus.softins.co.uk/servers.php?central=anygenre1.jamulus.io:22124" }
-            ,{"Any Genre 2", "http://jamulus.softins.co.uk/servers.php?central=anygenre2.jamulus.io:22224" }
-            ,{"Any Genre 3", "http://jamulus.softins.co.uk/servers.php?central=anygenre3.jamulus.io:22624" }
-            ,{"Genre Rock",  "http://jamulus.softins.co.uk/servers.php?central=rock.jamulus.io:22424" }
-            ,{"Genre Jazz",  "http://jamulus.softins.co.uk/servers.php?central=jazz.jamulus.io:22324" }
-            ,{"Genre Classical/Folk",  "http://jamulus.softins.co.uk/servers.php?central=classical.jamulus.io:22524" }
-            ,{"Genre Choral/BBShop",  "http://jamulus.softins.co.uk/servers.php?central=choral.jamulus.io:22724" } 
+                        {"Any Genre 1", "http://jamulus.softins.co.uk/servers.php?central=anygenre1.jamulus.io:22124" }
+                        ,{"Any Genre 2", "http://jamulus.softins.co.uk/servers.php?central=anygenre2.jamulus.io:22224" } 
+                        ,{"Any Genre 3", "http://jamulus.softins.co.uk/servers.php?central=anygenre3.jamulus.io:22624" } 
+                        ,{"Genre Rock",  "http://jamulus.softins.co.uk/servers.php?central=rock.jamulus.io:22424" }
+                        ,{"Genre Jazz",  "http://jamulus.softins.co.uk/servers.php?central=jazz.jamulus.io:22324" }
+                        ,{"Genre Classical/Folk",  "http://jamulus.softins.co.uk/servers.php?central=classical.jamulus.io:22524" }
+                        ,{"Genre Choral/BBShop",  "http://jamulus.softins.co.uk/servers.php?central=choral.jamulus.io:22724" } 
         };
 
         static Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
@@ -210,14 +210,24 @@ namespace JamFan21.Pages
 
     class ServersForMe
         {
-            public ServersForMe(string cat, string ip, string na, string ci, int distance, string w, int count) 
-                { category = cat;  serverIpAddress = ip; name = na; city = ci; distanceAway = distance; who = w; usercount = count; }
+            public ServersForMe(string cat, string ip, string na, string ci, int distance, string w, Client[] originallyWho, int count)
+            {
+                category = cat;
+                serverIpAddress = ip;
+                name = na;
+                city = ci;
+                distanceAway = distance;
+                who = w;
+                whoObjectFromSourceData = originallyWho ;
+                usercount = count;
+            }
             public string category;
             public string serverIpAddress;
             public string name;
             public string city;
             public int distanceAway;
             public string who;
+            public Client[] whoObjectFromSourceData; // just to get the hash to work later. the who string is decorated but this is just data.
             public int usercount;
         }
 
@@ -358,6 +368,86 @@ namespace JamFan21.Pages
             m_ipAddrToLatLong[ipAddr] = new LatLong("", "");
         }
 
+        static Dictionary<string, DateTime> cfs = new Dictionary<string, DateTime>(); // connection, first sighting
+        static Dictionary<string, DateTime> cls = new Dictionary<string, DateTime>(); // connection, latest sighting
+
+        // Here we note who s.who is, because we care how long a person has been on a server. Nothing more than that for now.
+        protected void NotateWhoHere(string server, string who)
+        {
+//            Console.WriteLine(server, who);
+            string hash = server + who;
+
+            try
+            {
+                // maybe we never heard of them.
+                if (false == cfs.ContainsKey(hash))
+                {
+                    cfs[hash] = DateTime.Now;
+                    return; // don't forget the finally!
+                }
+
+                // ok, we heard of them. Have 10 minutes elapsed since we saw them last? Like, maybe nobody has run my app. So ten mins.
+                if (DateTime.Now > cls[hash].AddMinutes(10))
+                {
+                    // Yeah? Restart their initial sighting clock.
+                    cfs[hash] = DateTime.Now;
+                }
+
+                // we saw them recently. Just update their last Time Last Seen...
+            }
+            finally
+            {
+                cls[hash] = DateTime.Now;
+            }
+        }
+
+
+        protected string DurationHere(string server, string who)
+        {
+            string hash = server + who;
+            if (false == cfs.ContainsKey(hash))
+                return "";
+
+            string show = "";
+            while (true)
+            {
+                TimeSpan ts = DateTime.Now.Subtract(cfs[hash]);
+
+                /*
+                if (ts.Days > 0)
+                {
+                    show = ts.Days.ToString() + "d";
+                    break;
+                }
+                if (ts.Hours > 0)
+                {
+                    show = ts.Hours.ToString() + "h";
+                    break;
+                }
+                */
+
+                if (ts.Hours > 0) // once an hour is elapsed, don't show nothin.
+                    break;
+
+                if (ts.TotalMinutes > 5)
+                {
+                    show = "(" + ts.Minutes.ToString() + "m)";
+                    break;
+                }
+
+                // on the very first notice, i don't want this indicator, cuz it's gonna frustrate me with saw-just-onces
+                if (ts.TotalMinutes > 1) // so let's see them for 1 minute before we show anything fancy
+                    show = "<b>(just arrived)</b>"; // after 1 minute, until 6th minute, they've Just Arrived
+                else
+                    show = "(" + ts.Minutes.ToString() + "m)";
+
+                break;
+            }
+
+            return " <font size='-1'><i>" + show + "</i></font>";
+        }
+
+
         public async Task<string> GetGutsRightNow() 
         {
             await MineLists();
@@ -386,6 +476,9 @@ namespace JamFan21.Pages
                     string who = "";
                     foreach(var guy in server.clients)
                     {
+                        // Here we note who s.who is, because we care how long a person has been on a server. Nothing more than that for now.
+                        NotateWhoHere(server.name, guy.name);
+
                         string slimmerInstrument = guy.instrument;
                         if (slimmerInstrument == "-")
                             slimmerInstrument = "";
@@ -462,7 +555,7 @@ namespace JamFan21.Pages
                     if (lat.Length > 1 || lon.Length > 1)
                         dist = DistanceFromClient(lat, lon);
 
-                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, dist, who, people));
+                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, dist, who, server.clients, people));
                 }
             }
 
@@ -490,7 +583,12 @@ namespace JamFan21.Pages
                     var newline = "<tr><td>" +
                         s.category.Replace("Genre ", "").Replace(" ", "&nbsp;") +
                         "<td><font size='-1'>" + HighlightUserSearchTerms(s.name) +
-                        "</font><td>" + HighlightUserSearchTerms(s.city) + "<td>" + HighlightUserSearchTerms(s.who) + "</tr>"; ;
+                        "</font><td>" + 
+                            HighlightUserSearchTerms(s.city) + 
+                            "<td>" + 
+                            HighlightUserSearchTerms(s.who) + 
+                            DurationHere(s.name, s.whoObjectFromSourceData[0].name) +  // we know there's just one! i hope!
+                            "</tr>"; ;
                     output += newline;
                 }
             }
