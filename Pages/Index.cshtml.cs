@@ -403,6 +403,17 @@ namespace JamFan21.Pages
         }
 
 
+        protected double DurationHereInMins(string server, string who)
+        {
+            string hash = server + who;
+            if(cfs.ContainsKey(hash))
+            {
+                TimeSpan ts = DateTime.Now.Subtract(cfs[hash]);
+                return ts.TotalMinutes;
+            }
+            return -1; //
+        }
+
         protected string DurationHere(string server, string who)
         {
             string hash = server + who;
@@ -438,7 +449,8 @@ namespace JamFan21.Pages
 
                 // on the very first notice, i don't want this indicator, cuz it's gonna frustrate me with saw-just-onces
                 if (ts.TotalMinutes > 1) // so let's see them for 1 minute before we show anything fancy
-                    show = "<b>(just&nbsp;arrived)</b>"; // after 1 minute, until 6th minute, they've Just Arrived
+                    show = "<b>(just&nbsp;" +
+                        "arrived)</b>"; // after 1 minute, until 6th minute, they've Just Arrived
                 else
                     show = "(" + ts.Minutes.ToString() + "m)";
 
@@ -570,10 +582,24 @@ namespace JamFan21.Pages
             {
                 if (s.usercount > 1)
                 {
+                    // if everyone here got here less than 14 minutes ago, then this is just assembled
+                    string newJamFlag = "";
+                    foreach(var user in s.whoObjectFromSourceData)
+                    {
+                        newJamFlag = "<font size='-2'><i>(just&nbsp;assembled)</i></font><br>";
+                        if (DurationHereInMins(s.name, user.name) < 14)
+                            continue;
+
+                        newJamFlag = ""; // Someone's start time is too old, so nevermind.
+                        break;
+                    }
+
                     var newline = "<tr><td>" +
                         s.category.Replace("Genre ", "").Replace(" ", "&nbsp;") +
                         "<td><font size='-1'>" + HighlightUserSearchTerms(s.name) +
-                        "</font><td>" + HighlightUserSearchTerms(s.city) + "<td>" + HighlightUserSearchTerms(s.who) + "</tr>"; ;
+                        "</font><td>" + HighlightUserSearchTerms(s.city) + "<td>" + 
+                        newJamFlag +
+                        HighlightUserSearchTerms(s.who) + "</tr>"; ;
                     output += newline;
                 }
             }
