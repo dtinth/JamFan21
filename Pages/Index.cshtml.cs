@@ -69,6 +69,7 @@ namespace JamFan21.Pages
                         ,{"Genre Jazz",  "http://jamulus.softins.co.uk/servers.php?central=jazz.jamulus.io:22324" }
                         ,{"Genre Classical/Folk",  "http://jamulus.softins.co.uk/servers.php?central=classical.jamulus.io:22524" }
                         ,{"Genre Choral/BBShop",  "http://jamulus.softins.co.uk/servers.php?central=choral.jamulus.io:22724" } 
+
         };
 
         static Dictionary<string, string> LastReportedList = new Dictionary<string, string>();
@@ -437,7 +438,7 @@ namespace JamFan21.Pages
 
                 // on the very first notice, i don't want this indicator, cuz it's gonna frustrate me with saw-just-onces
                 if (ts.TotalMinutes > 1) // so let's see them for 1 minute before we show anything fancy
-                    show = "<b>(just arrived)</b>"; // after 1 minute, until 6th minute, they've Just Arrived
+                    show = "<b>(just&nbsp;arrived)</b>"; // after 1 minute, until 6th minute, they've Just Arrived
                 else
                     show = "(" + ts.Minutes.ToString() + "m)";
 
@@ -562,7 +563,7 @@ namespace JamFan21.Pages
             IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
             //IEnumerable<ServersForMe> sortedByMusicianCount = allMyServers.OrderByDescending(svr => svr.usercount);
 
-            string output = "<table border='1'><tr><u><th>Genre<th>Name<th>City<th>Who</u></tr>";
+            string output = "<center><table class='table table-light table-hover table-striped'><tr><u><th>Genre<th>Name<th>City<th>Who</u></tr>";
 
             // First all with more than one musician:
             foreach (var s in sortedByDistanceAway)
@@ -593,7 +594,7 @@ namespace JamFan21.Pages
                 }
             }
 
-            output += "</table>";
+            output += "</table></center>";
             return output;
         }
 
