@@ -575,7 +575,18 @@ namespace JamFan21.Pages
             IEnumerable<ServersForMe> sortedByDistanceAway = allMyServers.OrderBy(svr => svr.distanceAway);
             //IEnumerable<ServersForMe> sortedByMusicianCount = allMyServers.OrderByDescending(svr => svr.usercount);
 
-            string output = "<center><table class='table table-light table-hover table-striped'><tr><u><th>Genre<th>Name<th>City<th>Who</u></tr>";
+            int iActiveJamFans = 0;
+            foreach(var timeski in clientIPsDeemedLegit.Values)
+            {
+                if (DateTime.Now < timeski.AddMinutes(30))
+                    iActiveJamFans++;
+            }
+
+            string output = "";
+            if (iActiveJamFans > 1)
+                output = "<center><font size='1'>" + iActiveJamFans.ToString() + " JamFans</font></center><br>";
+
+            output += "<center><table class='table table-light table-hover table-striped'><tr><u><th>Genre<th>Name<th>City<th>Who</u></tr>";
 
             // First all with more than one musician:
             foreach (var s in sortedByDistanceAway)
@@ -625,6 +636,7 @@ namespace JamFan21.Pages
         }
 
         private static Dictionary<string, DateTime> clientIPLastVisit = new Dictionary<string, DateTime>();
+        static Dictionary<string, DateTime> clientIPsDeemedLegit = new Dictionary<string, DateTime>();
 
         private static System.Threading.Mutex m_serializerMutex = new System.Threading.Mutex();
         public string RightNow
@@ -653,7 +665,13 @@ namespace JamFan21.Pages
                             var lastRefresh = clientIPLastVisit[ipaddr];
                             if (DateTime.Now < lastRefresh.AddSeconds(135))
                                 if (DateTime.Now > lastRefresh.AddSeconds(115))
+                                {
                                     Console.Write(" :)");
+
+                                    // this IP is the key, and the time is the value?
+                                    // yeah, cuz each IP counts once.
+                                    clientIPsDeemedLegit[ipaddr] = DateTime.Now;
+                                }
                         }
                         clientIPLastVisit[ipaddr] = DateTime.Now;
 
