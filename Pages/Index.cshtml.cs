@@ -138,15 +138,23 @@ namespace JamFan21.Pages
             // don't have cached data, or it's too old.
             // NOWEVER, THIS SHIT IF OFFLINE
 
-            IPGeolocationAPI api = new IPGeolocationAPI("79fdbc34bdbd42f8aa3e14896598c40e");
-            GeolocationParams geoParams = new GeolocationParams();
-            geoParams.SetIPAddress(ip);
-            geoParams.SetFields("geo,time_zone,currency");
-            Geolocation geolocation = api.GetGeolocation(geoParams);
-            latitude = Convert.ToDouble(geolocation.GetLatitude());
-            longitude = Convert.ToDouble(geolocation.GetLongitude());
-            m_ipAddrToLatLong[ip] = new LatLong(latitude.ToString(), longitude.ToString());
-            Console.WriteLine("A client IP has been cached: " + ip + " " + geolocation.GetCity());
+            try
+            {
+                IPGeolocationAPI api = new IPGeolocationAPI("79fdbc34bdbd42f8aa3e14896598c40e");
+                GeolocationParams geoParams = new GeolocationParams();
+                geoParams.SetIPAddress(ip);
+                geoParams.SetFields("geo,time_zone,currency");
+                Geolocation geolocation = api.GetGeolocation(geoParams);
+                latitude = Convert.ToDouble(geolocation.GetLatitude());
+                longitude = Convert.ToDouble(geolocation.GetLongitude());
+                m_ipAddrToLatLong[ip] = new LatLong(latitude.ToString(), longitude.ToString());
+                Console.WriteLine("A client IP has been cached: " + ip + " " + geolocation.GetCity());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error getting geolocation for " + ip + ": " + e.Message);
+                m_ipAddrToLatLong[ip] = new LatLong("0", "0");
+            }
         }
 
 //        protected static Dictionary<string, LatLong> m_ipAddrToLatLong = new Dictionary<string, LatLong>();
@@ -211,10 +219,11 @@ namespace JamFan21.Pages
 
     class ServersForMe
         {
-            public ServersForMe(string cat, string ip, string na, string ci, int distance, string w, Client[] originallyWho, int count)
+            public ServersForMe(string cat, string ip, long port, string na, string ci, int distance, string w, Client[] originallyWho, int count)
             {
                 category = cat;
                 serverIpAddress = ip;
+                serverPort = port;
                 name = na;
                 city = ci;
                 distanceAway = distance;
@@ -224,6 +233,7 @@ namespace JamFan21.Pages
             }
             public string category;
             public string serverIpAddress;
+            public long serverPort;
             public string name;
             public string city;
             public int distanceAway;
@@ -568,7 +578,7 @@ namespace JamFan21.Pages
                     if (lat.Length > 1 || lon.Length > 1)
                         dist = DistanceFromClient(lat, lon);
 
-                    allMyServers.Add(new ServersForMe(key, server.ip, server.name, server.city, dist, who, server.clients, people));
+                    allMyServers.Add(new ServersForMe(key, server.ip, server.port, server.name, server.city, dist, who, server.clients, people));
                 }
             }
 
@@ -605,10 +615,12 @@ namespace JamFan21.Pages
                         break;
                     }
 
+                    var serverAddress = s.serverIpAddress + ":" + s.serverPort;
+
                     var newline = "<tr><td>" +
                         s.category.Replace("Genre ", "").Replace(" ", "&nbsp;") +
-                        "<td><font size='-1'>" + HighlightUserSearchTerms(s.name) +
-                        "</font><td>" + HighlightUserSearchTerms(s.city) + "<td>" + 
+                        "<td><a class='link-unstyled' title='Copy server address to clipboard' href='javascript:copyToClipboard(&quot;" + serverAddress + "&quot;)'><font size='-1'>" + HighlightUserSearchTerms(s.name) +
+                        "</a></font><td>" + HighlightUserSearchTerms(s.city) + "<td>" + 
                         newJamFlag +
                         HighlightUserSearchTerms(s.who) + "</tr>"; ;
                     output += newline;
@@ -651,12 +663,19 @@ namespace JamFan21.Pages
                     if (ipaddr.Length > 5)
                     {
                         IPGeolocationAPI api = new IPGeolocationAPI("79fdbc34bdbd42f8aa3e14896598c40e");
-                        GeolocationParams geoParams = new GeolocationParams();
-                        geoParams.SetIPAddress(ipaddr);
-                        geoParams.SetFields("geo,time_zone,currency");
-                        Geolocation geolocation = api.GetGeolocation(geoParams);
-                        Console.Write("Refresh request from ");
-                        Console.Write(geolocation.GetCity());
+                        try
+                        {
+                            GeolocationParams geoParams = new GeolocationParams();
+                            geoParams.SetIPAddress(ipaddr);
+                            geoParams.SetFields("geo,time_zone,currency");
+                            Geolocation geolocation = api.GetGeolocation(geoParams);
+                            Console.Write("Refresh request from ");
+                            Console.Write(geolocation.GetCity());
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Error: " + e.Message);
+                        }
 
                         // Visually indicate if we last heard from this ipaddr
                         // after about 125 seconds has elapsed

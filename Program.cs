@@ -26,8 +26,21 @@ namespace JamFan21
                       .UseKestrel(
                         options =>
                         {
-                            options.ListenAnyIP(80);
-  options.ListenAnyIP(443, listenOptions => {   listenOptions.UseHttps("jamfan.pfx", "jamfan"); }); 
+                            var httpPort = 80;
+
+                            // Allow overriding port using the PORT environment variable.
+                            if (Environment.GetEnvironmentVariable("PORT") != null) {
+                                httpPort = int.Parse(Environment.GetEnvironmentVariable("PORT"));
+                            }
+
+                            options.ListenAnyIP(httpPort);
+
+                            // Listen on port 443 if "jamfan.pfx" exists.
+                            if (System.IO.File.Exists("jamfan.pfx")) {
+                                options.ListenAnyIP(443, listenOptions => {
+                                    listenOptions.UseHttps("jamfan.pfx", "jamfan");
+                                });
+                            }
                         }
                         );
     //                */
