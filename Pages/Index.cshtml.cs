@@ -584,7 +584,7 @@ namespace JamFan21.Pages
 
             string output = "";
             if (iActiveJamFans > 1)
-                output = "<center><font size='1'>" + iActiveJamFans.ToString() + " JamFans</font></center><br>";
+                output = "<center>" + iActiveJamFans.ToString() + " JamFans</center><br>";
 
             output += "<center><table class='table table-light table-hover table-striped'><tr><u><th>Genre<th>Name<th>City<th>Who</u></tr>";
 
