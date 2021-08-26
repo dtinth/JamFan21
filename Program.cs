@@ -21,8 +21,7 @@ namespace JamFan21
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>()
-//                    ;
-  //                  /*
+                    ;  /*
                       .UseKestrel(
                         options =>
                         {
@@ -43,7 +42,7 @@ namespace JamFan21
                             }
                         }
                         );
-    //                */
+                */
                 });
     }
 }
