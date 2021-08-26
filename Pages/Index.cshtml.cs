@@ -607,7 +607,7 @@ namespace JamFan21.Pages
                     string newJamFlag = "";
                     foreach(var user in s.whoObjectFromSourceData)
                     {
-                        newJamFlag = "<font size='-2'><i>(just&nbsp;assembled)</i></font><br>";
+                        newJamFlag = "<i>(just&nbsp;assembled)</i><br>";
                         if (DurationHereInMins(s.name, user.name) < 14)
                             continue;
 
