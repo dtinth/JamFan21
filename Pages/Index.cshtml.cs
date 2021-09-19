@@ -460,7 +460,7 @@ namespace JamFan21.Pages
                 // on the very first notice, i don't want this indicator, cuz it's gonna frustrate me with saw-just-onces
                 if (ts.TotalMinutes > 1) // so let's see them for 1 minute before we show anything fancy
                     show = "<b>(just&nbsp;" +
-                        "arrived)</b>"; // after 1 minute, until 6th minute, they've Just Arrived
+                        "arrived - 剛加入)</b>"; // after 1 minute, until 6th minute, they've Just Arrived
                 else
                     show = "(" + ts.Minutes.ToString() + "m)";
 
@@ -607,7 +607,7 @@ namespace JamFan21.Pages
                     string newJamFlag = "";
                     foreach(var user in s.whoObjectFromSourceData)
                     {
-                        newJamFlag = "<i>(just&nbsp;assembled)</i><br>";
+                        newJamFlag = "<font color='blue'>(just&nbsp;assembled&nbsp;&middot; 成員皆剛加入)</font><br>";
                         if (DurationHereInMins(s.name, user.name) < 14)
                             continue;
 
