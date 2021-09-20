@@ -427,7 +427,7 @@ namespace JamFan21.Pages
         }
 
 
-        protected static string LocalizedText(string english, string chinese, string thai = null, string portuguese = null)
+        protected static string LocalizedText(string english, string chinese, string thai, string portuguese = null)
         {
             switch (m_ThreeLetterNationCode)
             {
@@ -436,7 +436,7 @@ namespace JamFan21.Pages
                 case "TWN":
                     return chinese;
                 case "THA":
-                    return english; // can't return thai yet. don't know the thai.
+                    return thai;
                 case "BRA":
                     return english; // can't return portguese yet. don't know portguese.
             }
@@ -478,7 +478,7 @@ namespace JamFan21.Pages
                 // on the very first notice, i don't want this indicator, cuz it's gonna frustrate me with saw-just-onces
                 if (ts.TotalMinutes > 1) // so let's see them for 1 minute before we show anything fancy
                 {
-                    string phrase = LocalizedText("just&nbsp;arrived", "剛加入");
+                    string phrase = LocalizedText("just&nbsp;arrived", "剛加入", "เพิ่งมาถึง");
                     show = "<b>(" + phrase + ")</b>"; // after 1 minute, until 6th minute, they've Just Arrived
                 }
                 else
@@ -627,7 +627,7 @@ namespace JamFan21.Pages
                     string newJamFlag = "";
                     foreach(var user in s.whoObjectFromSourceData)
                     {
-                        string translatedPhrase = LocalizedText("Just&nbsp;assembled.", "成員皆剛加入");
+                        string translatedPhrase = LocalizedText("Just&nbsp;assembled.", "成員皆剛加入", "เพิ่งประกอบ");
                         newJamFlag = "<font color='blue'>(" + (s.serverFull ? "Full. " : "") + translatedPhrase + ")</font><br>";
                         if (DurationHereInMins(s.name, user.name) < 14)
                             continue;
