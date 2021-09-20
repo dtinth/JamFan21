@@ -478,7 +478,7 @@ namespace JamFan21.Pages
                 // on the very first notice, i don't want this indicator, cuz it's gonna frustrate me with saw-just-onces
                 if (ts.TotalMinutes > 1) // so let's see them for 1 minute before we show anything fancy
                 {
-                    string phrase = LocalizedText("just&nbsp;arrived", "剛加入", "เพิ่งมาถึง");
+                    string phrase = LocalizedText("just&nbsp;arrived", "剛加入", "เพิ่งมา");
                     show = "<b>(" + phrase + ")</b>"; // after 1 minute, until 6th minute, they've Just Arrived
                 }
                 else
@@ -627,7 +627,7 @@ namespace JamFan21.Pages
                     string newJamFlag = "";
                     foreach(var user in s.whoObjectFromSourceData)
                     {
-                        string translatedPhrase = LocalizedText("Just&nbsp;assembled.", "成員皆剛加入", "เพิ่งประกอบ");
+                        string translatedPhrase = LocalizedText("Just&nbsp;assembled.", "成員皆剛加入", "เพิ่งรวมตัว");
                         newJamFlag = "<font color='blue'>(" + (s.serverFull ? "Full. " : "") + translatedPhrase + ")</font><br>";
                         if (DurationHereInMins(s.name, user.name) < 14)
                             continue;
