@@ -424,6 +424,22 @@ namespace JamFan21.Pages
             return -1; //
         }
 
+
+        protected static string LocalizedText(string english, string chinese, string thai = null, string portuguese = null)
+        {
+            switch (m_ThreeLetterNationCode)
+            {
+                case "CHN":
+                    return chinese;
+                case "TWN":
+                    return chinese;
+                case "THA":
+                    return english; // can't return thai yet. don't know the thai.
+                case "BRA":
+                    return english; // can't return portguese yet. don't know portguese.
+            }
+            return english; //uber alles
+        }
         protected string DurationHere(string server, string who)
         {
             string hash = server + who;
@@ -459,8 +475,10 @@ namespace JamFan21.Pages
 
                 // on the very first notice, i don't want this indicator, cuz it's gonna frustrate me with saw-just-onces
                 if (ts.TotalMinutes > 1) // so let's see them for 1 minute before we show anything fancy
-                    show = "<b>(just&nbsp;" +
-                        "arrived - 剛加入)</b>"; // after 1 minute, until 6th minute, they've Just Arrived
+                {
+                    string phrase = LocalizedText("just&nbsp;arrived", "剛加入");
+                    show = "<b>(" + phrase + ")</b>"; // after 1 minute, until 6th minute, they've Just Arrived
+                }
                 else
                     show = "(" + ts.Minutes.ToString() + "m)";
 
@@ -607,7 +625,8 @@ namespace JamFan21.Pages
                     string newJamFlag = "";
                     foreach(var user in s.whoObjectFromSourceData)
                     {
-                        newJamFlag = "<font color='blue'>(just&nbsp;assembled&nbsp;&middot; 成員皆剛加入)</font><br>";
+                        string translatedPhrase = LocalizedText("just&nbsp;assembled", "成員皆剛加入");
+                        newJamFlag = "<font color='blue'>(" + translatedPhrase + ")</font><br>";
                         if (DurationHereInMins(s.name, user.name) < 14)
                             continue;
 
@@ -651,6 +670,8 @@ namespace JamFan21.Pages
         static Dictionary<string, DateTime> clientIPsDeemedLegit = new Dictionary<string, DateTime>();
 
         private static System.Threading.Mutex m_serializerMutex = new System.Threading.Mutex();
+
+        static string m_ThreeLetterNationCode = "USA";
         public string RightNow
         {
             get
@@ -671,6 +692,8 @@ namespace JamFan21.Pages
                             Geolocation geolocation = api.GetGeolocation(geoParams);
                             Console.Write("Refresh request from ");
                             Console.Write(geolocation.GetCity());
+                            Console.Write(", " + geolocation.GetCountryCode3());
+                            m_ThreeLetterNationCode = geolocation.GetCountryCode3();
                         }
                         catch (Exception e)
                         {
