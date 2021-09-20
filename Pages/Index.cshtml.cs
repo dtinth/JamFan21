@@ -219,7 +219,7 @@ namespace JamFan21.Pages
 
     class ServersForMe
         {
-            public ServersForMe(string cat, string ip, long port, string na, string ci, int distance, string w, Client[] originallyWho, int count)
+            public ServersForMe(string cat, string ip, long port, string na, string ci, int distance, string w, Client[] originallyWho, int count, bool full)
             {
                 category = cat;
                 serverIpAddress = ip;
@@ -230,6 +230,7 @@ namespace JamFan21.Pages
                 who = w;
                 whoObjectFromSourceData = originallyWho ;
                 usercount = count;
+                serverFull = full;
             }
             public string category;
             public string serverIpAddress;
@@ -240,6 +241,7 @@ namespace JamFan21.Pages
             public string who;
             public Client[] whoObjectFromSourceData; // just to get the hash to work later. the who string is decorated but this is just data.
             public int usercount;
+            public bool serverFull;
         }
 
         public string HighlightUserSearchTerms(string str)
@@ -596,7 +598,7 @@ namespace JamFan21.Pages
                     if (lat.Length > 1 || lon.Length > 1)
                         dist = DistanceFromClient(lat, lon);
 
-                    allMyServers.Add(new ServersForMe(key, server.ip, server.port, server.name, server.city, dist, who, server.clients, people));
+                    allMyServers.Add(new ServersForMe(key, server.ip, server.port, server.name, server.city, dist, who, server.clients, people, server.maxclients == server.clients.GetLength(0) ));
                 }
             }
 
@@ -625,12 +627,12 @@ namespace JamFan21.Pages
                     string newJamFlag = "";
                     foreach(var user in s.whoObjectFromSourceData)
                     {
-                        string translatedPhrase = LocalizedText("just&nbsp;assembled", "成員皆剛加入");
-                        newJamFlag = "<font color='blue'>(" + translatedPhrase + ")</font><br>";
+                        string translatedPhrase = LocalizedText("Just&nbsp;assembled.", "成員皆剛加入");
+                        newJamFlag = "<font color='blue'>(" + (s.serverFull ? "Full. " : "") + translatedPhrase + ")</font><br>";
                         if (DurationHereInMins(s.name, user.name) < 14)
                             continue;
 
-                        newJamFlag = ""; // Someone's start time is too old, so nevermind.
+                        newJamFlag = (s.serverFull ? "<font color='blue'>Full.</font></br>" : ""); // Someone's start time is too old, so nevermind.
                         break;
                     }
 
